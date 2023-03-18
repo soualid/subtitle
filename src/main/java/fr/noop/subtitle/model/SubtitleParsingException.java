@@ -17,4 +17,7 @@ public class SubtitleParsingException extends Exception {
     public SubtitleParsingException(String message) {
         super(message);
     }
+    public SubtitleParsingException(String message, Exception e) {
+        super(message, e);
+    }
 }

@@ -14,12 +14,14 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.CoderMalfunctionError;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import fr.noop.charset.iso6937.Iso6937Charset;
 import org.apache.commons.lang3.StringUtils;
 
 import fr.noop.subtitle.model.SubtitleParser;
@@ -57,7 +59,7 @@ public class StlParser implements SubtitleParser {
             StlGsi gsi = this.readGsi(dis);
             stl = new StlObject(gsi);
         } catch (IOException e) {
-            throw new SubtitleParsingException("Unable to parse Gsi block");
+            throw new SubtitleParsingException("Unable to parse Gsi block" + e.getMessage(), e);
         }
 
         // Iterate over all TTI blocks and parse them
@@ -69,7 +71,7 @@ public class StlParser implements SubtitleParser {
             try {
                 tti = this.readTti(dis, stl.getGsi());
             } catch (IOException e) {
-                throw new SubtitleParsingException("Unable to parse tti block");
+                throw new SubtitleParsingException("Unable to parse tti block: " + e.getMessage(), e);
             }
 
             if (!skipUserdataTf || tti.getEbn() != 254) {
@@ -278,11 +280,17 @@ public class StlParser implements SubtitleParser {
         byte [] tfBytes = new byte[112];
         dis.readFully(tfBytes, 0, 112);
         try {
-            tti.setTf(new String(tfBytes, charset));
+            System.out.println("will use " + charset);
+            if ("ISO-6937-2".equals(charset)) {
+                tti.setTf(new String(tfBytes, new Iso6937Charset("ISO-6937-2", new String[] { })));
+            } else {
+                tti.setTf(new String(tfBytes, charset));
+            }
         } catch (CoderMalfunctionError e) {
             // There exist some STL files in the wild, which contain userdata not parsable using the gsi charset
             // this is the case for some kinds of software, which carry meta information in EBN-254 text fields
-            tti.setTf(new String(tfBytes));
+            System.out.println("will use default charset");
+            tti.setTf(new String(tfBytes, "ISO-8859-1"));
         }
 
         // TTI is fully parsed

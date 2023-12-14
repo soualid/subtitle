@@ -198,6 +198,8 @@ public class TtmlWriter implements SubtitleWriter {
     private void writeCues(TtmlObject ttmlObject, XMLStreamWriter xsw) throws XMLStreamException {
         // Start of cues
         xsw.writeStartElement("body");
+        xsw.writeAttribute("style", "defaultStyle");
+        xsw.writeAttribute("region", "defaultRegion");
         xsw.writeStartElement("div");
 
         for (SubtitleCue cue : ttmlObject.getCues()) {

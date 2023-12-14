@@ -101,6 +101,12 @@ public class TtmlObject  extends BaseSubtitleObject {
             ttmlCue.setId(String.format("cue-%d", cueIndex+1));
             this.addCue(ttmlCue);
         }
+
+        if (this.regions.size() == 0) {
+            String regionId = String.format("region-%d", this.regions.size() + 1);
+            this.regionMapping.put("defaultRegion", regionId);
+            this.regions.put("defaultRegion", new SubtitleRegion(50, 45));
+        }
     }
 
     private String buildRegionSignature(SubtitleRegion region) {

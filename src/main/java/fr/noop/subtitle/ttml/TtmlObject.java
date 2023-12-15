@@ -112,9 +112,8 @@ public class TtmlObject  extends BaseSubtitleObject {
             style.setTextAlign(SubtitleStyle.TextAlign.CENTER);
             style.setBackgroundColor("black");
             String styleId = String.format("style-%d", this.styles.size()+1);
-            String styleSignature = this.buildStyleSignature(style);
-            this.styleMapping.put(styleSignature, styleId);
-            this.styles.put(styleId, new SubtitleStyle(style));
+            this.styleMapping.put("defaultStyle", styleId);
+            this.styles.put("defaultStyle", new SubtitleStyle(style));
         }
     }
 

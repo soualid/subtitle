@@ -107,6 +107,15 @@ public class TtmlObject  extends BaseSubtitleObject {
             this.regionMapping.put("defaultRegion", regionId);
             this.regions.put("defaultRegion", new SubtitleRegion(50, 45));
         }
+        if (this.styles.size() == 0) {
+            SubtitleStyle style = new SubtitleStyle();
+            style.setTextAlign(SubtitleStyle.TextAlign.CENTER);
+            style.setBackgroundColor("black");
+            String styleId = String.format("style-%d", this.styles.size()+1);
+            String styleSignature = this.buildStyleSignature(style);
+            this.styleMapping.put(styleSignature, styleId);
+            this.styles.put(styleId, new SubtitleStyle(style));
+        }
     }
 
     private String buildRegionSignature(SubtitleRegion region) {

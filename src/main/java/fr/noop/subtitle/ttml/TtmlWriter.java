@@ -136,6 +136,9 @@ public class TtmlWriter implements SubtitleWriter {
             if (style.getColor() != null) {
                 xsw.writeAttribute(NS_TTS, "color", style.getColor());
             }
+            if (style.getBackgroundColor() != null) {
+                xsw.writeAttribute(NS_TTS, "backgroundColor", style.getBackgroundColor());
+            }
 
             // Text align
             if (style.getTextAlign() != null) {

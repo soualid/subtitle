@@ -23,6 +23,7 @@ public class SubtitleStyle {
     public enum Property {
         DIRECTION,
         TEXT_ALIGN,
+        BACKGROUND_COLOR,
         COLOR,
         FONT_STYLE,
         FONT_WEIGHT,
@@ -90,9 +91,15 @@ public class SubtitleStyle {
     public void setTextAlign(TextAlign textAlign) {
         this.setProperty(Property.TEXT_ALIGN, textAlign);
     }
+    public void setBackgroundColor(String color) {
+        this.setProperty(Property.BACKGROUND_COLOR, color);
+    }
 
     public String getColor() {
         return (String) this.getProperty(Property.COLOR);
+    }
+    public String getBackgroundColor() {
+        return (String) this.getProperty(Property.BACKGROUND_COLOR);
     }
 
     public void setColor(String color) {

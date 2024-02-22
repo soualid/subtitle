@@ -24,7 +24,7 @@ dependencies {
 group = 'fr.noop'
 version = '0.9.6-SNAPSHOT'
 description = 'subtitle'
-java.sourceCompatibility = JavaVersion.VERSION_1_7
+java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 java {
     withSourcesJar()

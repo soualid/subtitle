@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="fr.noop.subtitle.srt.SrtParserTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-12-15T14:18:13" hostname="MacBook-Pro-de-Simon.local" time="0.005">
+  <properties/>
+  <testcase name="test" classname="fr.noop.subtitle.srt.SrtParserTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="fr.noop.subtitle.util.SubtitleStyleTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2023-12-15T14:18:13" hostname="MacBook-Pro-de-Simon.local" time="0.001">
+  <properties/>
+  <testcase name="testGetColor" classname="fr.noop.subtitle.util.SubtitleStyleTest" time="0.0"/>
+  <testcase name="testGetFontStyle" classname="fr.noop.subtitle.util.SubtitleStyleTest" time="0.0"/>
+  <testcase name="testSetTextDecoration" classname="fr.noop.subtitle.util.SubtitleStyleTest" time="0.0"/>
+  <testcase name="testGetTextAlign" classname="fr.noop.subtitle.util.SubtitleStyleTest" time="0.0"/>
+  <testcase name="testGetDirection" classname="fr.noop.subtitle.util.SubtitleStyleTest" time="0.001"/>
+  <testcase name="testGetProperty" classname="fr.noop.subtitle.util.SubtitleStyleTest" time="0.0"/>
+  <testcase name="testGetTextDecoration" classname="fr.noop.subtitle.util.SubtitleStyleTest" time="0.0"/>
+  <testcase name="testSetFontStyle" classname="fr.noop.subtitle.util.SubtitleStyleTest" time="0.0"/>
+  <testcase name="testSetTextAlign" classname="fr.noop.subtitle.util.SubtitleStyleTest" time="0.0"/>
+  <testcase name="testSetDirection" classname="fr.noop.subtitle.util.SubtitleStyleTest" time="0.0"/>
+  <testcase name="testSetColor" classname="fr.noop.subtitle.util.SubtitleStyleTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

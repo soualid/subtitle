@@ -280,7 +280,7 @@ public class StlParser implements SubtitleParser {
         byte [] tfBytes = new byte[112];
         dis.readFully(tfBytes, 0, 112);
         try {
-            System.out.println("will use " + charset);
+            //System.out.println("will use " + charset);
             if ("ISO-6937-2".equals(charset)) {
                 tti.setTf(new String(tfBytes, new Iso6937Charset("ISO-6937-2", new String[] { })));
             } else {

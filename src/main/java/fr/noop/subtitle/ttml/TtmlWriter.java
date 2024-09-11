@@ -86,6 +86,9 @@ public class TtmlWriter implements SubtitleWriter {
             // End of tt
             xsw.writeEndElement();
 
+            xsw.flush();
+            sw.flush();
+
             byte[] bytes = sw.toString().getBytes();
             InputStream is = new ByteArrayInputStream(bytes);
             StreamSource ss = new StreamSource(is);
@@ -98,12 +101,12 @@ public class TtmlWriter implements SubtitleWriter {
                 transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
                 transformer.transform(ss, sr);
             } catch (TransformerConfigurationException e) {
-
+                throw new RuntimeException(e);
             } catch (TransformerException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         } catch (XMLStreamException e) {
-
+            throw new RuntimeException(e);
         }
     }
 

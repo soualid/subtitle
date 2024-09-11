@@ -112,8 +112,10 @@ public class TtmlWriter implements SubtitleWriter {
         xsw.writeStartElement("metadata");
 
         // Write title
+        String title = (String) ttmlObject.getProperty(SubtitleObject.Property.TITLE);
+        if (title == null) title = "Untitled";
         xsw.writeStartElement(NS_TTM, "title");
-        xsw.writeCharacters((String) ttmlObject.getProperty(SubtitleObject.Property.TITLE));
+        xsw.writeCharacters(title);
         xsw.writeEndElement();
 
         // End of metadata

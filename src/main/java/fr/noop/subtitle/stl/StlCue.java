@@ -34,9 +34,16 @@ public class StlCue extends BaseSubtitleCue implements SubtitleRegionCue {
     // height and y values vary depending on TTI vp value and cue number of lines
     SubtitleRegion region;
 
+    // Positions (in percentage of the screen)
+    private int verticalPosition; // Vertical position in percentage
+    private int horizontalPosition; // Horizontal position in percentage
+    private static final int MAX_VERTICAL_UNITS = 23;
+
     public StlCue(StlTti tti) {
         super(tti.getTci(), tti.getTco());
         this.addTti(tti);
+        this.verticalPosition = calculateVerticalPosition(tti);
+        this.horizontalPosition = calculateHorizontalPosition(tti);
     }
 
     public List<StlTti> getTtis() {
@@ -149,10 +156,46 @@ public class StlCue extends BaseSubtitleCue implements SubtitleRegionCue {
     }
 
     public SubtitleRegion getRegion() {
-       return this.region;
+        return this.region;
     }
 
     public void setRegion(SubtitleRegion region) {
         this.region = region;
+    }
+
+    /**
+     * Calculate vertical position in percentage based on TTI vp value
+     */
+    private int calculateVerticalPosition(StlTti tti) {
+        // Example calculation based on the vp field (Vertical Position)
+        int vp = tti.getVp();
+        // Assuming MAX_VERTICAL_UNITS represents the maximum units for vertical position
+        return (vp * 100) / MAX_VERTICAL_UNITS;
+    }
+
+    /**
+     * Calculate horizontal position in percentage based on TTI jc value
+     */
+    private int calculateHorizontalPosition(StlTti tti) {
+        // Assuming jc (Justification Code) represents horizontal alignment
+        var jc = tti.getJc();
+        switch (jc) {
+            case LEFT:
+                return 0;
+            case CENTER:
+                return 50;
+            case RIGHT:
+                return 100;
+            default:
+                return 50;
+        }
+    }
+
+    public int getVerticalPosition() {
+        return this.verticalPosition;
+    }
+
+    public int getHorizontalPosition() {
+        return this.horizontalPosition;
     }
 }

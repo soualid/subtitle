@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="fr.noop.subtitle.util.SubtitleTimeCodeTest" tests="19" skipped="0" failures="0" errors="0" timestamp="2023-12-15T14:18:13" hostname="MacBook-Pro-de-Simon.local" time="0.002">
+<testsuite name="fr.noop.subtitle.util.SubtitleTimeCodeTest" tests="19" skipped="0" failures="0" errors="0" timestamp="2024-11-11T16:13:33" hostname="SOUALIDMAC.local" time="0.002">
   <properties/>
-  <testcase name="testSetMillisecond" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.001"/>
+  <testcase name="testSetMillisecond" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.0"/>
   <testcase name="testSubtract" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.0"/>
   <testcase name="testToString" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.0"/>
   <testcase name="testCompareTo" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.0"/>
   <testcase name="testGetHour" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.0"/>
   <testcase name="testGetTime" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.0"/>
   <testcase name="testSetHourException" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.0"/>
-  <testcase name="testGetMillisecond" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.0"/>
-  <testcase name="testSetSecondException1" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.001"/>
+  <testcase name="testGetMillisecond" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.001"/>
+  <testcase name="testSetSecondException1" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.0"/>
   <testcase name="testSetSecondException2" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.0"/>
   <testcase name="testSetMillisecondException1" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.0"/>
   <testcase name="testSetMillisecondException2" classname="fr.noop.subtitle.util.SubtitleTimeCodeTest" time="0.0"/>

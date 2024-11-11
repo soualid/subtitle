@@ -21,6 +21,8 @@ public class SubtitlePlainText implements SubtitleText {
     public SubtitlePlainText(String text) {
         this.text = text;
     }
+    public SubtitlePlainText() {
+    }
 
     @Override
     public boolean isEmpty() {

@@ -25,6 +25,10 @@ public class SubtitleTimeCode implements Comparable<SubtitleTimeCode> {
     private int second;
     private int millisecond;
 
+    public SubtitleTimeCode() {
+
+    }
+
     public SubtitleTimeCode(int hour, int minute, int second, int millisecond) {
         this.setHour(hour);
         this.setMinute(minute);

@@ -21,6 +21,7 @@ public interface SubtitleObject {
     public enum Property {
         TITLE,
         DESCRIPTION,
+        LANGUAGE,
         COPYRIGHT,
         FRAME_RATE;
     }

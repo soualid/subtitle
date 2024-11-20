@@ -25,6 +25,7 @@ public class SubtitleStyle {
         TEXT_ALIGN,
         BACKGROUND_COLOR,
         COLOR,
+        FONT_FAMILY,
         FONT_STYLE,
         FONT_WEIGHT,
         TEXT_DECORATION;
@@ -94,12 +95,18 @@ public class SubtitleStyle {
     public void setBackgroundColor(String color) {
         this.setProperty(Property.BACKGROUND_COLOR, color);
     }
+    public void setFontFamily(String fontFamily) {
+        this.setProperty(Property.FONT_FAMILY, fontFamily);
+    }
 
     public String getColor() {
         return (String) this.getProperty(Property.COLOR);
     }
     public String getBackgroundColor() {
         return (String) this.getProperty(Property.BACKGROUND_COLOR);
+    }
+    public String getFontFamily() {
+        return (String) this.getProperty(Property.FONT_FAMILY);
     }
 
     public void setColor(String color) {

@@ -145,6 +145,10 @@ public class TtmlWriter implements SubtitleWriter {
                 xsw.writeAttribute(NS_TTS, "backgroundColor", style.getBackgroundColor());
             }
 
+            if (style.getFontFamily() != null) {
+                xsw.writeAttribute(NS_TTS, "fontFamily", style.getFontFamily());
+            }
+
             // Text align
             if (style.getTextAlign() != null) {
                 String textAlign = "center";

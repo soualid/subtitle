@@ -1,5 +1,6 @@
 package fr.noop.subtitle.stl;
 
+import fr.noop.charset.iso6937.Iso6937Charset;
 import fr.noop.subtitle.base.BaseSubtitleCue;
 import fr.noop.subtitle.model.*;
 import fr.noop.subtitle.util.SubtitleTimeCode;
@@ -142,7 +143,7 @@ public class StlWriter implements SubtitleWriter {
             }
         }
 
-        byte[] textBytes = textBuilder.toString().getBytes(StandardCharsets.ISO_8859_1);
+        byte[] textBytes = textBuilder.toString().getBytes(new Iso6937Charset("ISO-6937-2", new String[] { }));
         int textOffset = 0;
         int blockIndex = 0;
 
@@ -176,7 +177,7 @@ public class StlWriter implements SubtitleWriter {
             gsiBlock[12] = (byte) (end.getMillisecond() / 40);
 
             // Vertical Position (VP)
-            gsiBlock[13] = 0x00; // Default VP; adapt as needed
+            gsiBlock[13] = 0x15; // Default VP; adapt as needed
 
             // Justification Code (JC)
             gsiBlock[14] = 0x02; // Default to center justification

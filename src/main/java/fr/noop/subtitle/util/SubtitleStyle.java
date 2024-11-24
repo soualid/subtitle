@@ -89,6 +89,26 @@ public class SubtitleStyle {
         return (TextAlign) this.getProperty(Property.TEXT_ALIGN);
     }
 
+    /**
+     * Merge the properties of another SubtitleStyle into this one.
+     * Existing properties in this style take precedence.
+     *
+     * @param other the other SubtitleStyle to merge into this one
+     */
+    public void merge(SubtitleStyle other) {
+        if (other == null || other.getProperties().isEmpty()) {
+            return; // Nothing to merge
+        }
+
+        for (Map.Entry<Property, Object> entry : other.getProperties().entrySet()) {
+            // If this property is not already set, copy it from the other style
+            if (!this.properties.containsKey(entry.getKey())) {
+                this.setProperty(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+
     public void setTextAlign(TextAlign textAlign) {
         this.setProperty(Property.TEXT_ALIGN, textAlign);
     }

@@ -1,13 +1,3 @@
-/*
- *  This file is part of the noOp organization .
- *
- *  (c) Cyrille Lebeaupin <clebeaupin@noop.fr>
- *
- *  For the full copyright and license information, please view the LICENSE
- *  file that was distributed with this source code.
- *
- */
-
 package fr.noop.subtitle.vtt;
 
 import java.io.BufferedReader;
@@ -15,16 +5,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import fr.noop.subtitle.model.SubtitleLine;
 import fr.noop.subtitle.model.SubtitleParser;
 import fr.noop.subtitle.model.SubtitleParsingException;
 import fr.noop.subtitle.util.*;
 
-/**
- * Created by clebeaupin on 11/10/15.
- */
 public class VttParser implements SubtitleParser {
 
     private enum CursorStatus {
@@ -36,13 +27,8 @@ public class VttParser implements SubtitleParser {
         CUE_TEXT;
     }
 
-    private enum TagStatus {
-        NONE,
-        OPEN,
-        CLOSE
-    }
-
     private String charset; // Charset of the input files
+    private Map<String, SubtitleStyle> globalStyles = new HashMap<>();
 
     public VttParser(String charset) {
         this.charset = charset;
@@ -50,22 +36,21 @@ public class VttParser implements SubtitleParser {
 
     @Override
     public VttObject parse(InputStream is) throws IOException, SubtitleParsingException {
-    	return parse(is, true);
+        return parse(is, true);
     }
 
     @Override
     public VttObject parse(InputStream is, boolean strict) throws IOException, SubtitleParsingException {
-        // Create srt object
         VttObject vttObject = new VttObject();
-
-        // Read each lines
         BufferedReader br = new BufferedReader(new InputStreamReader(is, this.charset));
-        String textLine = "";
+        String textLine;
         CursorStatus cursorStatus = CursorStatus.NONE;
         VttCue cue = null;
-        String cueText = ""; // Text of the cue
+        String cueText = "";
+        int lineNumber = 0;
 
         while ((textLine = br.readLine()) != null) {
+            lineNumber++;
             textLine = textLine.trim();
 
             // Remove BOM
@@ -73,43 +58,45 @@ public class VttParser implements SubtitleParser {
                 textLine = StringUtils.removeBOM(textLine);
             }
 
-            // All Vtt files start with WEBVTT
+            // All VTT files start with WEBVTT
             if (cursorStatus == CursorStatus.NONE && textLine.equals("WEBVTT")) {
                 cursorStatus = CursorStatus.SIGNATURE;
                 continue;
             }
 
-            if (cursorStatus == CursorStatus.SIGNATURE ||
-                    cursorStatus == CursorStatus.EMPTY_LINE) {
+            // Handle multiple STYLE blocks
+            if (cursorStatus == CursorStatus.SIGNATURE && textLine.equals("STYLE")) {
+                StringBuilder styleBlock = new StringBuilder();
+                while ((textLine = br.readLine()) != null && !textLine.trim().isEmpty()) {
+                    lineNumber++;
+                    styleBlock.append(textLine).append("\n");
+                }
+                parseStyleBlock(styleBlock.toString());
+                continue;
+            }
+
+            // Skip empty lines
+            if (cursorStatus == CursorStatus.SIGNATURE || cursorStatus == CursorStatus.EMPTY_LINE) {
                 if (textLine.isEmpty()) {
                     continue;
                 }
 
-                // New cue
+                // Start of a new cue
                 cue = new VttCue();
                 cursorStatus = CursorStatus.CUE_ID;
 
-                if (
-                    textLine.length() < 16 ||
-                    !textLine.substring(13, 16).equals("-->")
-                ) {
-                    // First textLine is the cue number
+                // Check if the line is not a timecode but a cue ID
+                if (textLine.length() < 16 || !textLine.substring(13, 16).equals("-->")) {
                     cue.setId(textLine);
                     continue;
                 }
-
-                // There is no cue number
             }
 
-
-            // Second textLine defines the start and end time codes
-            // 00:01:21.456 --> 00:01:23.417
+            // Process timecode line
             if (cursorStatus == CursorStatus.CUE_ID) {
-                if (textLine.length() < 29 ||
-                    !textLine.substring(13, 16).equals("-->")
-                ) {
+                if (textLine.length() < 29 || !textLine.substring(13, 16).equals("-->")) {
                     throw new SubtitleParsingException(String.format(
-                            "Timecode textLine is badly formated: %s", textLine));
+                            "Timecode line is badly formatted: %s at line %d", textLine, lineNumber));
                 }
 
                 cue.setStartTime(this.parseTimeCode(textLine.substring(0, 12)));
@@ -118,27 +105,16 @@ public class VttParser implements SubtitleParser {
                 continue;
             }
 
-            if (cursorStatus == CursorStatus.CUE_TIMECODE &&
-                textLine.isEmpty() &&
-                strict
-            ) {
-                // Do not accept empty subtitle if strict
+            // Handle empty cue text in strict mode
+            if (cursorStatus == CursorStatus.CUE_TIMECODE && textLine.isEmpty() && strict) {
                 throw new SubtitleParsingException(String.format(
-                        "Empty subtitle is not allowed in WebVTT for cue at timecode: %s", cue.getStartTime()));
+                        "Empty subtitle is not allowed in WebVTT for cue at timecode: %s at line %d",
+                        cue.getStartTime(), lineNumber));
             }
 
-            // Enf of cue
-            if (
-                (
-                    cursorStatus == CursorStatus.CUE_TIMECODE ||
-                    cursorStatus == CursorStatus.CUE_TEXT
-                ) &&
-                textLine.isEmpty()
-            ) {
-                // End of cue
-                // Process multilines text in one time
-                // A class or a style can be applied for more than one line
-                cue.setLines(parseCueText(cueText));
+            // End of a cue block
+            if ((cursorStatus == CursorStatus.CUE_TIMECODE || cursorStatus == CursorStatus.CUE_TEXT) && textLine.isEmpty()) {
+                cue.setLines(parseCueText(cueText, lineNumber));
                 vttObject.addCue(cue);
                 cue = null;
                 cueText = "";
@@ -146,11 +122,8 @@ public class VttParser implements SubtitleParser {
                 continue;
             }
 
-            // Add new text to cue
-            if (cursorStatus == CursorStatus.CUE_TIMECODE ||
-                cursorStatus ==  CursorStatus.CUE_TEXT
-            ) {
-                // New line
+            // Add text to the cue
+            if (cursorStatus == CursorStatus.CUE_TIMECODE || cursorStatus == CursorStatus.CUE_TEXT) {
                 if (!cueText.isEmpty()) {
                     cueText += "\n";
                 }
@@ -160,147 +133,153 @@ public class VttParser implements SubtitleParser {
                 continue;
             }
 
-
-
-        	throw new SubtitleParsingException(String.format(
-        			"Unexpected line: %s", textLine));
+            // Handle unexpected lines
+            throw new SubtitleParsingException(String.format("Unexpected line: %s at line %d", textLine, lineNumber));
         }
 
         return vttObject;
     }
 
-    private List<SubtitleLine> parseCueText(String cueText) {
-        String text = "";
-        List<String> tags = new ArrayList<>();
-        List<SubtitleLine> cueLines = new ArrayList<>();
-        VttLine cueLine = null; // Current cue line
+    private void parseStyleBlock(String styleContent) {
+        String[] rules = styleContent.split("}");
+        for (String rule : rules) {
+            if (rule.contains("::cue(")) {
+                int classStart = rule.indexOf('.') + 1;
+                int classEnd = rule.indexOf(')', classStart);
+                if (classStart > 0 && classEnd > classStart) {
+                    String className = rule.substring(classStart, classEnd).trim();
 
-        // Process:
-        // - voice
-        // - class
-        // - styles
-        for (int i=0; i<cueText.length(); i++) {
-            String tag = null;
-            TagStatus tagStatus = TagStatus.NONE;
-            char c = cueText.charAt(i);
+                    SubtitleStyle style = new SubtitleStyle();
+                    int braceStart = rule.indexOf('{') + 1;
+                    String properties = rule.substring(braceStart).trim();
 
-            if (c != '\n') {
-                // Remove this newline from text
-                text += c;
-            }
+                    for (String property : properties.split(";")) {
+                        if (property.contains(":")) {
+                            String[] keyValue = property.split(":");
+                            String key = keyValue[0].trim();
+                            String value = keyValue[1].trim();
 
-            // Last characters (3 characters max)
-            String textEnd = text.substring(Math.max(0, text.length()-3), text.length());
-
-            if (textEnd.equals("<b>") || textEnd.equals("<u>") || textEnd.equals("<i>") ||
-                    textEnd.equals("<v ") || textEnd.equals("<c.") || textEnd.equals("<c ")) {
-                // Open tag
-                tag = String.valueOf(textEnd.charAt(1));
-                tagStatus = TagStatus.OPEN;
-
-                // Add tag
-                tags.add(tag);
-
-                // Remove open tag from text
-                text = text.substring(0, text.length()-3);
-            } else if (c == '>') {
-                // Close tag
-                tagStatus = TagStatus.CLOSE;
-
-                // Pop tag from tags
-                tag = tags.remove(tags.size()-1);
-
-                int closeTagLength = 1; // Size in chars of the close tag
-
-                if (textEnd.charAt(0) == '/') {
-                    // Real close tag: </u>, </c>, </b>, </i>
-                    closeTagLength = 4;
-                }
-
-                // Remove close tag from text
-                text = text.substring(0, text.length()-closeTagLength);
-            } else if (c != '\n' && i < cueText.length()-1){
-                continue;
-            }
-
-            if (c != '\n' && text.isEmpty()) {
-                // No thing todo
-                continue;
-            }
-
-            if (cueLine == null) {
-                cueLine = new VttLine();
-            }
-
-            // Create text, apply styles and append to the cue line
-            SubtitleStyle style = new SubtitleStyle();
-            List<String> analyzedTags = new ArrayList<>();
-            analyzedTags.addAll(tags);
-
-            if (tagStatus == TagStatus.CLOSE) {
-                // Apply style from last close tag
-                analyzedTags.add(tag);
-            } else if (tagStatus == TagStatus.OPEN) {
-                analyzedTags.remove(tags.size() - 1);
-            }
-
-            for (String analyzedTag: analyzedTags) {
-                if (analyzedTag.equals("v")) {
-                    cueLine.setVoice(text);
-                    text = "";
-                    break;
-                }
-
-                // Bold characters
-                if (analyzedTag.equals("b")) {
-                    style.setProperty(SubtitleStyle.Property.FONT_WEIGHT, SubtitleStyle.FontWeight.BOLD);
-                    continue;
-                }
-
-                // Italic characters
-                if (analyzedTag.equals("i")) {
-                    style.setProperty(SubtitleStyle.Property.FONT_STYLE, SubtitleStyle.FontStyle.ITALIC);
-                    continue;
-                }
-
-                // Underline characters
-                if (analyzedTag.equals("u")) {
-                    style.setProperty(SubtitleStyle.Property.TEXT_DECORATION, SubtitleStyle.TextDecoration.UNDERLINE);
-                    continue;
-                }
-
-                // Class apply to characters
-                if (analyzedTag.equals("c")) {
-                    // Cannot convert class
-                    if (tagStatus == TagStatus.CLOSE && tag.equals("c") && !textEnd.equals("/c>")) {
-                        // This is not a real close tag
-                        // so push it again
-                        text = "";
-                        tags.add(tag);
+                            SubtitleStyle.Property mappedProperty = mapCssProperty(key);
+                            if (mappedProperty != null) {
+                                style.setProperty(mappedProperty, value);
+                            }
+                        }
                     }
 
-                    continue;
+                    globalStyles.put(className, style);
+                }
+            }
+        }
+    }
+
+    private List<SubtitleLine> parseCueText(String cueText, int lineNumber) throws SubtitleParsingException {
+        List<SubtitleLine> cueLines = new ArrayList<>();
+        StringBuilder currentText = new StringBuilder();
+        List<String> openTags = new ArrayList<>();
+        VttLine cueLine = new VttLine();
+
+        // Nouvelle expression régulière pour détecter les balises ouvrantes et fermantes
+        String regex = "<(/?[a-zA-Z0-9_.\\-]+)>";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(cueText);
+
+        int lastIndex = 0; // Position pour suivre le texte entre les balises
+        while (matcher.find()) {
+            // Ajouter le texte avant la balise détectée
+            if (matcher.start() > lastIndex) {
+                String plainText = cueText.substring(lastIndex, matcher.start());
+                if (!plainText.isBlank()) {
+                    addTextToCueLine(cueLine, plainText, new ArrayList<>(openTags));
                 }
             }
 
-            if (!text.isEmpty()) {
-                if (style.hasProperties()) {
-                    cueLine.addText(new SubtitleStyledText(text, style));
+            String tag = matcher.group(1); // Contenu de la balise
+            if (!tag.startsWith("/")) {
+                // Balise ouvrante
+                openTags.add(tag);
+            } else {
+                // Balise fermante
+                if (!openTags.isEmpty()) {
+                    openTags.remove(openTags.size() - 1);
                 } else {
-                    cueLine.addText(new SubtitlePlainText(text));
+                    throw new SubtitleParsingException(String.format(
+                            "Mismatched closing tag: %s at line %d", tag, lineNumber));
                 }
             }
 
-            if (c == '\n' || i == (cueText.length()-1)) {
-                // Line is finished
-                cueLines.add(cueLine);
-                cueLine = null;
-            }
+            lastIndex = matcher.end(); // Avancer après la balise
+        }
 
-            text = "";
+        // Ajouter le texte restant après la dernière balise
+        if (lastIndex < cueText.length()) {
+            String plainText = cueText.substring(lastIndex);
+            if (!plainText.isBlank()) {
+                addTextToCueLine(cueLine, plainText, new ArrayList<>(openTags));
+            }
+        }
+
+        if (!cueLine.isEmpty()) {
+            cueLines.add(cueLine);
+        }
+
+        // Vérifier les balises ouvertes restantes
+        if (!openTags.isEmpty()) {
+            throw new SubtitleParsingException(String.format(
+                    "Unclosed tag(s) at the end of the cue: %s at line %d", openTags, lineNumber));
         }
 
         return cueLines;
+    }
+
+    private void addTextToCueLine(VttLine cueLine, String text, List<String> activeTags) {
+        if (activeTags.isEmpty()) {
+            cueLine.addText(new SubtitlePlainText(text));
+        } else {
+            SubtitleStyle style = new SubtitleStyle();
+            for (String tag : activeTags) {
+                if (tag.startsWith("c.")) {
+                    String classList = tag.substring(2); // Extraire la partie après "c."
+                    String[] classes = classList.split("\\."); // Diviser par les points pour gérer plusieurs classes
+                    for (String className : classes) {
+                        SubtitleStyle globalStyle = globalStyles.get(className);
+                        if (globalStyle != null) {
+                            style.merge(globalStyle); // Fusionner les styles pour chaque classe
+                        }
+                    }
+                }
+            }
+
+
+            if (style.hasProperties()) {
+                cueLine.addText(new SubtitleStyledText(text, style));
+            } else {
+                cueLine.addText(new SubtitlePlainText(text));
+            }
+        }
+    }
+
+
+    private SubtitleStyle.Property mapCssProperty(String cssKey) {
+        switch (cssKey.toLowerCase()) {
+            case "direction":
+                return SubtitleStyle.Property.DIRECTION;
+            case "text-align":
+                return SubtitleStyle.Property.TEXT_ALIGN;
+            case "background-color":
+                return SubtitleStyle.Property.BACKGROUND_COLOR;
+            case "color":
+                return SubtitleStyle.Property.COLOR;
+            case "font-family":
+                return SubtitleStyle.Property.FONT_FAMILY;
+            case "font-style":
+                return SubtitleStyle.Property.FONT_STYLE;
+            case "font-weight":
+                return SubtitleStyle.Property.FONT_WEIGHT;
+            case "text-decoration":
+                return SubtitleStyle.Property.TEXT_DECORATION;
+            default:
+                return null;
+        }
     }
 
     private SubtitleTimeCode parseTimeCode(String timeCodeString) throws SubtitleParsingException {

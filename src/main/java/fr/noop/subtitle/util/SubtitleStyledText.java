@@ -25,6 +25,11 @@ public class SubtitleStyledText extends SubtitlePlainText implements SubtitleSty
         this.style = style;
     }
 
+    @Override
+    public boolean isStyled() {
+        return true;
+    }
+
     public SubtitleStyle getStyle() {
         return this.style;
     }

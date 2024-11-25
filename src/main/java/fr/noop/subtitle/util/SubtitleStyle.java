@@ -26,6 +26,7 @@ public class SubtitleStyle {
         BACKGROUND_COLOR,
         COLOR,
         FONT_FAMILY,
+        VERTICAL_POSITION_PERCENT,
         FONT_STYLE,
         FONT_WEIGHT,
         TEXT_DECORATION;

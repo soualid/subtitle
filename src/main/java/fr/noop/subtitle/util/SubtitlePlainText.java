@@ -29,6 +29,11 @@ public class SubtitlePlainText implements SubtitleText {
         return this.text.isEmpty();
     }
 
+    @Override
+    public boolean isStyled() {
+        return false;
+    }
+
     public String getText() {
         return this.text;
     }

@@ -25,4 +25,6 @@ public interface SubtitleText {
      * @return true if there is no text
      */
     public boolean isEmpty();
+
+    public boolean isStyled();
 }

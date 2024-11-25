@@ -49,6 +49,8 @@ public class VttParser implements SubtitleParser {
         String cueText = "";
         int lineNumber = 0;
 
+        var lineHeightPercent = "";
+        var lineAlign = "center";
         while ((textLine = br.readLine()) != null) {
             lineNumber++;
             textLine = textLine.trim();
@@ -94,16 +96,49 @@ public class VttParser implements SubtitleParser {
 
             // Process timecode line
             if (cursorStatus == CursorStatus.CUE_ID) {
-                if (textLine.length() < 29 || !textLine.substring(13, 16).equals("-->")) {
+                lineAlign = "center";
+                lineHeightPercent = "";
+
+                Pattern timecodePattern = Pattern.compile(
+                        "(\\d{2}:\\d{2}:\\d{2}\\.\\d{3}) --> (\\d{2}:\\d{2}:\\d{2}\\.\\d{3})(.*)"
+                );
+                Matcher matcher = timecodePattern.matcher(textLine);
+                if (!matcher.matches()) {
                     throw new SubtitleParsingException(String.format(
                             "Timecode line is badly formatted: %s at line %d", textLine, lineNumber));
                 }
 
-                cue.setStartTime(this.parseTimeCode(textLine.substring(0, 12)));
-                cue.setEndTime(this.parseTimeCode(textLine.substring(17)));
+                // Extraction des timecodes
+                cue.setStartTime(this.parseTimeCode(matcher.group(1)));
+                cue.setEndTime(this.parseTimeCode(matcher.group(2)));
+
+                // Extraction des attributs supplémentaires (line, align, etc.)
+                String attributes = matcher.group(3);
+                if (attributes != null && !attributes.isBlank()) {
+                    Pattern attributePattern = Pattern.compile("(\\w+):([^ ]+)");
+                    Matcher attrMatcher = attributePattern.matcher(attributes);
+                    while (attrMatcher.find()) {
+                        String key = attrMatcher.group(1).trim();
+                        String value = attrMatcher.group(2).trim();
+
+                        switch (key) {
+                            case "line":
+                                lineHeightPercent = value;
+                                break;
+                            case "align":
+                                lineAlign = value;
+                                break;
+                            default:
+                                // Ignorer les attributs non gérés
+                                break;
+                        }
+                    }
+                }
+
                 cursorStatus = CursorStatus.CUE_TIMECODE;
                 continue;
             }
+
 
             // Handle empty cue text in strict mode
             if (cursorStatus == CursorStatus.CUE_TIMECODE && textLine.isEmpty() && strict) {
@@ -114,7 +149,7 @@ public class VttParser implements SubtitleParser {
 
             // End of a cue block
             if ((cursorStatus == CursorStatus.CUE_TIMECODE || cursorStatus == CursorStatus.CUE_TEXT) && textLine.isEmpty()) {
-                cue.setLines(parseCueText(cueText, lineNumber));
+                cue.setLines(parseCueText(cueText, lineAlign, lineHeightPercent, lineNumber));
                 vttObject.addCue(cue);
                 cue = null;
                 cueText = "";
@@ -172,54 +207,65 @@ public class VttParser implements SubtitleParser {
         }
     }
 
-    private List<SubtitleLine> parseCueText(String cueText, int lineNumber) throws SubtitleParsingException {
+    private List<SubtitleLine> parseCueText(String cueText, String lineAlign, String lineHeightPercent, int lineNumber) throws SubtitleParsingException {
         List<SubtitleLine> cueLines = new ArrayList<>();
-        StringBuilder currentText = new StringBuilder();
         List<String> openTags = new ArrayList<>();
-        VttLine cueLine = new VttLine();
+        VttLine currentLine = new VttLine();
 
-        // Nouvelle expression régulière pour détecter les balises ouvrantes et fermantes
+        // Expression régulière pour détecter les balises ouvrantes et fermantes
         String regex = "<(/?[a-zA-Z0-9_.\\-]+)>";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(cueText);
 
         int lastIndex = 0; // Position pour suivre le texte entre les balises
-        while (matcher.find()) {
-            // Ajouter le texte avant la balise détectée
-            if (matcher.start() > lastIndex) {
-                String plainText = cueText.substring(lastIndex, matcher.start());
-                if (!plainText.isBlank()) {
-                    addTextToCueLine(cueLine, plainText, new ArrayList<>(openTags));
+        for (int i = 0; i < cueText.length(); i++) {
+            if (cueText.charAt(i) == '\n' || i == cueText.length() - 1) {
+                // Traiter la ligne jusqu'à ici
+                String lineText = cueText.substring(lastIndex, i == cueText.length() - 1 ? i + 1 : i).trim();
+                if (!lineText.isEmpty()) {
+                    Matcher lineMatcher = pattern.matcher(lineText);
+                    int lineLastIndex = 0;
+                    while (lineMatcher.find()) {
+                        // Ajouter le texte avant la balise détectée
+                        if (lineMatcher.start() > lineLastIndex) {
+                            String plainText = lineText.substring(lineLastIndex, lineMatcher.start());
+                            if (!plainText.isBlank()) {
+                                addTextToCueLine(currentLine, plainText, lineAlign, lineHeightPercent, new ArrayList<>(openTags));
+                            }
+                        }
+
+                        String tag = lineMatcher.group(1); // Contenu de la balise
+                        if (!tag.startsWith("/")) {
+                            // Balise ouvrante
+                            openTags.add(tag);
+                        } else {
+                            // Balise fermante
+                            if (!openTags.isEmpty()) {
+                                openTags.remove(openTags.size() - 1);
+                            } else {
+                                throw new SubtitleParsingException(String.format(
+                                        "Mismatched closing tag: %s at line %d", tag, lineNumber));
+                            }
+                        }
+
+                        lineLastIndex = lineMatcher.end(); // Avancer après la balise
+                    }
+
+                    // Ajouter le texte restant après la dernière balise
+                    if (lineLastIndex < lineText.length()) {
+                        String plainText = lineText.substring(lineLastIndex);
+                        if (!plainText.isBlank()) {
+                            addTextToCueLine(currentLine, plainText, lineAlign, lineHeightPercent, new ArrayList<>(openTags));
+                        }
+                    }
                 }
-            }
 
-            String tag = matcher.group(1); // Contenu de la balise
-            if (!tag.startsWith("/")) {
-                // Balise ouvrante
-                openTags.add(tag);
-            } else {
-                // Balise fermante
-                if (!openTags.isEmpty()) {
-                    openTags.remove(openTags.size() - 1);
-                } else {
-                    throw new SubtitleParsingException(String.format(
-                            "Mismatched closing tag: %s at line %d", tag, lineNumber));
+                if (!currentLine.isEmpty()) {
+                    cueLines.add(currentLine);
+                    currentLine = new VttLine();
                 }
+                lastIndex = i + 1; // Avancer au caractère suivant après '\n'
             }
-
-            lastIndex = matcher.end(); // Avancer après la balise
-        }
-
-        // Ajouter le texte restant après la dernière balise
-        if (lastIndex < cueText.length()) {
-            String plainText = cueText.substring(lastIndex);
-            if (!plainText.isBlank()) {
-                addTextToCueLine(cueLine, plainText, new ArrayList<>(openTags));
-            }
-        }
-
-        if (!cueLine.isEmpty()) {
-            cueLines.add(cueLine);
         }
 
         // Vérifier les balises ouvertes restantes
@@ -231,7 +277,7 @@ public class VttParser implements SubtitleParser {
         return cueLines;
     }
 
-    private void addTextToCueLine(VttLine cueLine, String text, List<String> activeTags) {
+    private void addTextToCueLine(VttLine cueLine, String text, String lineAlign, String lineHeightPercent, List<String> activeTags) {
         if (activeTags.isEmpty()) {
             cueLine.addText(new SubtitlePlainText(text));
         } else {
@@ -239,7 +285,7 @@ public class VttParser implements SubtitleParser {
             for (String tag : activeTags) {
                 if (tag.startsWith("c.")) {
                     String classList = tag.substring(2); // Extraire la partie après "c."
-                    String[] classes = classList.split("\\."); // Diviser par les points pour gérer plusieurs classes
+                    String[] classes = classList.split("\\."); // Diviser par les points
                     for (String className : classes) {
                         SubtitleStyle globalStyle = globalStyles.get(className);
                         if (globalStyle != null) {
@@ -248,7 +294,23 @@ public class VttParser implements SubtitleParser {
                     }
                 }
             }
-
+            if (lineAlign != null && !lineAlign.isBlank()) {
+                switch (lineAlign.toLowerCase()) {
+                    case "start":
+                    case "left":
+                        style.setProperty(SubtitleStyle.Property.TEXT_ALIGN, SubtitleStyle.TextAlign.LEFT);
+                        break;
+                    case "right":
+                    case "end":
+                        style.setProperty(SubtitleStyle.Property.TEXT_ALIGN, SubtitleStyle.TextAlign.RIGHT);
+                        break;
+                    default:
+                        style.setProperty(SubtitleStyle.Property.TEXT_ALIGN, SubtitleStyle.TextAlign.CENTER);
+                }
+            }
+            if (lineHeightPercent != null && !lineHeightPercent.isBlank()) {
+                style.setProperty(SubtitleStyle.Property.VERTICAL_POSITION_PERCENT, lineHeightPercent);
+            }
 
             if (style.hasProperties()) {
                 cueLine.addText(new SubtitleStyledText(text, style));
@@ -257,7 +319,6 @@ public class VttParser implements SubtitleParser {
             }
         }
     }
-
 
     private SubtitleStyle.Property mapCssProperty(String cssKey) {
         switch (cssKey.toLowerCase()) {

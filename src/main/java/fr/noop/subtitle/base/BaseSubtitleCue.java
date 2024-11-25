@@ -28,6 +28,7 @@ public abstract class BaseSubtitleCue implements SubtitleCue {
     private SubtitleTimeCode endTime; // Stop displaying the cue at this time code
     private List<SubtitleLine> lines; // Lines composed of texts
 
+
     protected BaseSubtitleCue(SubtitleCue cue) {
         this.id = cue.getId();
         this.startTime = cue.getStartTime();

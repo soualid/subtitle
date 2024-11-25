@@ -3,17 +3,19 @@ package fr.noop.subtitle.stl;
 import fr.noop.charset.iso6937.Iso6937Charset;
 import fr.noop.subtitle.base.BaseSubtitleCue;
 import fr.noop.subtitle.model.*;
+import fr.noop.subtitle.util.SubtitleStyledText;
 import fr.noop.subtitle.util.SubtitleTimeCode;
+import fr.noop.subtitle.vtt.VttCue;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Corrected StlWriter for generating valid STL files.
+ * Corrected StlWriter for generating valid STL files with color and vertical position support.
  */
 public class StlWriter implements SubtitleWriter {
 
@@ -31,6 +33,7 @@ public class StlWriter implements SubtitleWriter {
             throw new RuntimeException("Failed to write STL file", e);
         }
     }
+
     private void writeHeader(SubtitleObject subtitleObject, DataOutputStream dos) throws IOException {
         byte[] header = new byte[HEADER_SIZE];
 
@@ -54,7 +57,7 @@ public class StlWriter implements SubtitleWriter {
         if (languageCode != null && languageCode.length() == 2) {
             System.arraycopy(languageCode.getBytes(StandardCharsets.US_ASCII), 0, header, 14, 2);
         } else {
-            System.arraycopy("0F".getBytes(StandardCharsets.US_ASCII), 0, header, 14, 2); // Default: '0F' (french)
+            System.arraycopy("0F".getBytes(StandardCharsets.US_ASCII), 0, header, 14, 2); // Default: '0F' (French)
         }
 
         // Original Program Title (OPT) - Position 15-47
@@ -69,42 +72,9 @@ public class StlWriter implements SubtitleWriter {
         var df = new SimpleDateFormat("yyMMdd").format(System.currentTimeMillis());
         System.arraycopy(df.getBytes(), 0, header, 224, 6);
 
-        // Revision Date (RD) - Position 230-235
-        System.arraycopy(df.getBytes(), 0, header, 230, 6);
-
-        // TNB 238..242
-        System.arraycopy(StringUtils.leftPad(subtitleObject.getCues().size()+"", 5, '0').getBytes(), 0, header, 238, 5);
-
-        // TNB 243..247
-        System.arraycopy(StringUtils.leftPad(subtitleObject.getCues().size()+"", 5, '0').getBytes(), 0, header, 243, 5);
-
-        // MNC 251..252
-        System.arraycopy("36".getBytes(), 0, header, 251, 2);
-
-        // MNR 253..254
-        System.arraycopy("23".getBytes(), 0, header, 253, 2);
-
-        // TCP 256..263
-        System.arraycopy("10000000".getBytes(), 0, header, 256, 8);
-
-        // TCF 264..271
-        var firstCue = subtitleObject.getCues().get(0);
-        var firstCueString = StringUtils.leftPad(firstCue.getStartTime().getHour()+"", 2, '0') +
-                StringUtils.leftPad(firstCue.getStartTime().getMinute()+"", 2, '0') +
-                StringUtils.leftPad(firstCue.getStartTime().getSecond()+"", 2, '0') +
-                StringUtils.leftPad((firstCue.getStartTime().getMillisecond()/40)+"", 2, '0');
-
-        System.arraycopy(firstCueString.getBytes(), 0, header, 264, 8);
-
-        // User-defined area (Position 20-1024)
-        for (int i = 272; i < HEADER_SIZE; i++) {
-            header[i] = 0x20; // Fill
-        }
-
         // Write the header
         dos.write(header);
     }
-
 
     private void writeBody(SubtitleObject subtitleObject, DataOutputStream dos) throws IOException {
         List<SubtitleCue> cues = subtitleObject.getCues();
@@ -113,8 +83,8 @@ public class StlWriter implements SubtitleWriter {
             SubtitleCue cue = cues.get(i);
             writeCue((BaseSubtitleCue) cue, dos, i + 1);
         }
-
     }
+
     private void writeCue(BaseSubtitleCue cue, DataOutputStream dos, int subtitleNumber) throws IOException {
         List<SubtitleLine> lines = cue.getLines();
 
@@ -125,90 +95,120 @@ public class StlWriter implements SubtitleWriter {
             end = adjustTimeCode(end, 40); // Add 40ms to ensure TCO > TCI
         }
 
-        // Generate the complete text with CR/LF (8A) between lines
+        // Generate the complete text with colors and CR/LF (8A) between lines
         StringBuilder textBuilder = new StringBuilder();
         for (int i = 0; i < lines.size(); i++) {
             SubtitleLine line = lines.get(i);
-            String text = line.getTexts().stream().map(SubtitleText::toString).reduce("", String::concat).trim();
+            for (var text : line.getTexts()) {
 
-            textBuilder.append((char) 0x0D);
-            textBuilder.append((char) 0x0B);
-            textBuilder.append((char) 0x0B);
-            textBuilder.append(text);
-            textBuilder.append((char) 0x0A);
-            textBuilder.append((char) 0x0A);
-
-            if (i < lines.size() - 1) {
-                textBuilder.append((char) 0x8A); // Add CR/LF between lines
+                var textToAdd = text.toString();
+                if (text.isStyled()) {
+                    var styledText = (SubtitleStyledText) text;
+                    textToAdd = applyColor(textToAdd, styledText.getStyle().getColor());
+                }
+                textBuilder.append((char) 0x0D);
+                textBuilder.append(textToAdd);
+                if (i < lines.size() - 1) {
+                    textBuilder.append((char) 0x8A);
+                }
             }
         }
 
-        byte[] textBytes = textBuilder.toString().getBytes(new Iso6937Charset("ISO-6937-2", new String[] { }));
+        byte[] textBytes = textBuilder.toString().getBytes(new Iso6937Charset("ISO-6937-2", new String[]{}));
         int textOffset = 0;
-        int blockIndex = 0;
 
-        while (textOffset < textBytes.length || blockIndex == 0) {
-            byte[] gsiBlock = new byte[TTI_BLOCK_SIZE];
+        while (textOffset < textBytes.length) {
+            byte[] ttiBlock = new byte[TTI_BLOCK_SIZE];
 
             // Subtitle Group Number (SGN)
-            gsiBlock[0] = 0x00;
+            ttiBlock[0] = 0x00;
 
             // Subtitle Number (SN)
-            gsiBlock[1] = (byte) (subtitleNumber - 1);
-            //gsiBlock[2] = (byte) ((subtitleNumber >> 8) & 0xFF);
+            ttiBlock[1] = (byte) (subtitleNumber - 1);
 
             // Extension Block Number (EBN)
-            gsiBlock[3] = (byte) (0xFF);
-            //gsiBlock[3] = (byte) (blockIndex & 0xFF);
-
-            // Cumulative Status (CS)
-            gsiBlock[4] = 0x00; // Not cumulative
+            ttiBlock[3] = (byte) 0xFF;
 
             // Start Time (TCI)
-            gsiBlock[5] = (byte) (start.getHour());
-            gsiBlock[6] = (byte) (start.getMinute());
-            gsiBlock[7] = (byte) (start.getSecond());
-            gsiBlock[8] = (byte) (start.getMillisecond() / 40);
+            ttiBlock[5] = (byte) (start.getHour());
+            ttiBlock[6] = (byte) (start.getMinute());
+            ttiBlock[7] = (byte) (start.getSecond());
+            ttiBlock[8] = (byte) (start.getMillisecond() / 40);
 
             // End Time (TCO)
-            gsiBlock[9] = (byte) (end.getHour());
-            gsiBlock[10] = (byte) (end.getMinute());
-            gsiBlock[11] = (byte) (end.getSecond());
-            gsiBlock[12] = (byte) (end.getMillisecond() / 40);
+            ttiBlock[9] = (byte) (end.getHour());
+            ttiBlock[10] = (byte) (end.getMinute());
+            ttiBlock[11] = (byte) (end.getSecond());
+            ttiBlock[12] = (byte) (end.getMillisecond() / 40);
 
             // Vertical Position (VP)
-            gsiBlock[13] = 0x15; // Default VP; adapt as needed
+            ttiBlock[13] = getVerticalPosition(lines.size()); // Calculate vertical position
 
             // Justification Code (JC)
-            gsiBlock[14] = 0x02; // Default to center justification
+            ttiBlock[14] = 0x02; // Center justification
 
-            // Comment Flag (CF)
-            gsiBlock[15] = 0x00; // Default to no comment
+            if (cue instanceof StlCue) {
+                var stlCue = (StlCue) cue;
+                ttiBlock[14] = (byte) stlCue.getTtis().get(0).getJc().getValue();
+            }
+            if (cue instanceof VttCue) {
+                var vttCue = (VttCue) cue;
+                var line = vttCue.getLines().get(0).getTexts().get(0);
+                if (line.isStyled()) {
+                    var style = ((SubtitleStyledText) line).getStyle();
+                    if (style.getTextAlign() != null) {
+                        switch (style.getTextAlign()) {
+                            case LEFT:
+                                ttiBlock[14] = 0x01; // Left justification
+                                break;
+                            case RIGHT:
+                                ttiBlock[14] = 0x03; // Right justification
+                                break;
+                            case CENTER:
+                                ttiBlock[14] = 0x02; // Center justification
+                                break;
+                        }
+                    }
+                }
+            }
 
             // Fill the Text Field
             int remainingLength = Math.min(112, textBytes.length - textOffset);
-            System.arraycopy(textBytes, textOffset, gsiBlock, 16, remainingLength);
+            System.arraycopy(textBytes, textOffset, ttiBlock, 16, remainingLength);
             textOffset += remainingLength;
 
-            // Add feeder (8F) to unused space or at the end of the last block
-            if (textOffset >= textBytes.length) {
-                if (remainingLength < 112) {
-                    gsiBlock[16 + remainingLength] = (byte) 0x8F; // Add feeder at the end of the text
-                }
-                for (int i = 16 + remainingLength + 1; i < 128; i++) {
-                    gsiBlock[i] = (byte) 0x8F; // Fill unused space with 8F
-                }
-            } else {
-                // Fill unused space in intermediate blocks with 8F
-                for (int i = 16 + remainingLength; i < 128; i++) {
-                    gsiBlock[i] = (byte) 0x8F;
-                }
+            // Fill unused space with 8F
+            for (int i = 16 + remainingLength; i < 128; i++) {
+                ttiBlock[i] = (byte) 0x8F;
             }
 
             // Write the TTI block
-            dos.write(gsiBlock);
-            blockIndex++;
+            dos.write(ttiBlock);
         }
+    }
+
+    private String applyColor(String text, String color) {
+        char colorControl = getColorControlCode(color);
+        return (char) 0x1C + "" + colorControl + text;
+    }
+
+    private char getColorControlCode(String color) {
+        switch (color.toLowerCase()) {
+            case "white": return 0x00; // White
+            case "red": return 0x01;   // Red
+            case "green": return 0x02; // Green
+            case "blue": return 0x03;  // Blue
+            case "cyan": return 0x04;  // Cyan
+            case "yellow": return 0x05; // Yellow
+            case "magenta": return 0x06; // Magenta
+            default: return 0x07;      // Default to black
+        }
+    }
+
+    private byte getVerticalPosition(int lineCount) {
+        // Example logic: position subtitles at a default vertical position based on line count
+        int basePosition = 20; // Default starting position
+        return (byte) Math.max(0, basePosition - lineCount);
     }
 
     private SubtitleTimeCode adjustTimeCode(SubtitleTimeCode timeCode, int millisecondsToAdd) {
@@ -222,28 +222,5 @@ public class StlWriter implements SubtitleWriter {
         int milliseconds = totalMilliseconds % 1000;
 
         return new SubtitleTimeCode(hours, minutes, seconds, milliseconds);
-    }
-
-    private byte createStyleByte(SubtitleLine line) {
-        byte style = 0;
-
-        if (line instanceof StlTti) {
-            StlTti tti = (StlTti) line;
-
-            // Set color
-            if (tti.getCf() > 0 && StlTti.TextColor.hasEnum(tti.getCf())) {
-                style |= StlTti.TextColor.getEnum(tti.getCf()).getValue();
-            }
-
-            // Set justification
-            if (tti.getJc() != null) {
-                style |= tti.getJc().getValue() << 4;
-            }
-
-            // Set vertical position
-            style |= (tti.getVp() & 0x0F) << 6;
-        }
-
-        return style;
     }
 }

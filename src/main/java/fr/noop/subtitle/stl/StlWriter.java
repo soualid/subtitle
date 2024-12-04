@@ -86,6 +86,46 @@ public class StlWriter implements SubtitleWriter {
         // Total Number of Subtitles - Position 243-247
         System.arraycopy(StringUtils.leftPad(""+subtitleObject.getCues().size(), 6 , '0').getBytes(), 0, header, 243, 6);
 
+        // Maximum Number of Displayable Characters in any text row - 251..252
+        // TODO
+        System.arraycopy("99".getBytes(), 0, header, 251, 6);
+
+        // Maximum Number of Displayable Rows - 253..254
+        // TODO
+        System.arraycopy("99".getBytes(), 0, header, 253, 6);
+
+        // 255 1 Time Code: Status
+        System.arraycopy( new byte[] { 0x1 }, 0, header, 255, 1);
+
+        // 256..263 8 Time Code: Start-of-Programme TCP
+        var firstCue = subtitleObject.getCues().get(0).getStartTime();
+        System.arraycopy(
+                (
+                        StringUtils.leftPad(""+firstCue.getHour(), 2, '0') +
+                        StringUtils.leftPad(""+firstCue.getMinute(), 2, '0') +
+                        StringUtils.leftPad(""+firstCue.getSecond(), 2, '0') +
+                        StringUtils.leftPad(""+(firstCue.getMillisecond() / 40), 2, '0')
+                ).getBytes(), 0, header, 256, 8);
+
+        // 264..271 8 Time Code: First In-Cue TCF
+        System.arraycopy(
+                (
+                        StringUtils.leftPad(""+firstCue.getHour(), 2, '0') +
+                        StringUtils.leftPad(""+firstCue.getMinute(), 2, '0') +
+                        StringUtils.leftPad(""+firstCue.getSecond(), 2, '0') +
+                        StringUtils.leftPad(""+(firstCue.getMillisecond() / 40), 2, '0')
+                ).getBytes(), 0, header, 256, 8);
+
+        // 272 1 Total Number of Disks TND
+        System.arraycopy( new byte[] { 0x1 }, 0, header, 272, 1);
+
+        // 273 1 Disk Sequence Number DSN
+        System.arraycopy( new byte[] { 0x1 }, 0, header, 273, 1);
+
+        // 274..276 3 Country of Origin CO
+        // TODO
+        System.arraycopy( "FRA".getBytes(), 0, header, 274, 3);
+
         // Write the header
         dos.write(header);
     }

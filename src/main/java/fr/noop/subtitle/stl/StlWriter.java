@@ -120,8 +120,8 @@ public class StlWriter implements SubtitleWriter {
         // TODO
         System.arraycopy("99".getBytes(), 0, header, 253, 2);
 
-        // 255 1 Time Code: Status
-        System.arraycopy( new byte[] { 0x1 }, 0, header, 255, 1);
+        // 255 1 Time Code: Status TCS
+        System.arraycopy( "1".getBytes(), 0, header, 255, 1);
 
         // 256..263 8 Time Code: Start-of-Programme TCP
         var firstCue = subtitleObject.getCues().get(0).getStartTime();

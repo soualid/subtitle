@@ -84,7 +84,7 @@ public class StlWriter implements SubtitleWriter {
         System.arraycopy(ttiCount.getBytes(), 0, header, 238, 6);
 
         // Total Number of Subtitles - Position 243-247
-        System.arraycopy(StringUtils.leftPad(""+subtitleObject.getCues().size(), 6 , '0').getBytes(), 0, header, 238, 6);
+        System.arraycopy(StringUtils.leftPad(""+subtitleObject.getCues().size(), 6 , '0').getBytes(), 0, header, 243, 6);
 
         // Write the header
         dos.write(header);

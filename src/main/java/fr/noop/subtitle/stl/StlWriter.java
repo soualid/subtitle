@@ -72,6 +72,9 @@ public class StlWriter implements SubtitleWriter {
         var df = new SimpleDateFormat("yyMMdd").format(System.currentTimeMillis());
         System.arraycopy(df.getBytes(), 0, header, 224, 6);
 
+        // Revision Date (RD) - Position 230-235
+        System.arraycopy(df.getBytes(), 0, header, 230, 6);
+
         // Write the header
         dos.write(header);
     }

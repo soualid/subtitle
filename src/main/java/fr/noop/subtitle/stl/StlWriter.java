@@ -201,6 +201,8 @@ public class StlWriter implements SubtitleWriter {
                 textBuilder.append((char) 0x0D);
                 textBuilder.append(textToAdd);
                 if (i < lines.size() - 1) {
+                    textBuilder.append((char) 0x0A);
+                    textBuilder.append((char) 0x0A);
                     textBuilder.append((char) 0x8A);
                 }
             }

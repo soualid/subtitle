@@ -88,11 +88,11 @@ public class StlWriter implements SubtitleWriter {
 
         // Maximum Number of Displayable Characters in any text row - 251..252
         // TODO
-        System.arraycopy("99".getBytes(), 0, header, 251, 6);
+        System.arraycopy("99".getBytes(), 0, header, 251, 2);
 
         // Maximum Number of Displayable Rows - 253..254
         // TODO
-        System.arraycopy("99".getBytes(), 0, header, 253, 6);
+        System.arraycopy("99".getBytes(), 0, header, 253, 2);
 
         // 255 1 Time Code: Status
         System.arraycopy( new byte[] { 0x1 }, 0, header, 255, 1);

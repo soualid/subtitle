@@ -195,6 +195,9 @@ public class StlWriter implements SubtitleWriter {
                     var styledText = (SubtitleStyledText) text;
                     textToAdd = applyColor(textToAdd, styledText.getStyle().getColor());
                 }
+
+                textToAdd = createBox(textToAdd);
+
                 textBuilder.append((char) 0x0D);
                 textBuilder.append(textToAdd);
                 if (i < lines.size() - 1) {
@@ -279,6 +282,10 @@ public class StlWriter implements SubtitleWriter {
     private String applyColor(String text, String color) {
         char colorControl = getColorControlCode(color);
         return (char) 0x1C + "" + colorControl + text;
+    }
+
+    private String createBox(String text) {
+        return (char) 0x0B + (char) 0x0B + text;
     }
 
     private char getColorControlCode(String color) {

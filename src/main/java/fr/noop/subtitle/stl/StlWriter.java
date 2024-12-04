@@ -114,7 +114,7 @@ public class StlWriter implements SubtitleWriter {
                         StringUtils.leftPad(""+firstCue.getMinute(), 2, '0') +
                         StringUtils.leftPad(""+firstCue.getSecond(), 2, '0') +
                         StringUtils.leftPad(""+(firstCue.getMillisecond() / 40), 2, '0')
-                ).getBytes(), 0, header, 256, 8);
+                ).getBytes(), 0, header, 264, 8);
 
         // 272 1 Total Number of Disks TND
         System.arraycopy( new byte[] { 0x1 }, 0, header, 272, 1);

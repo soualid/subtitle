@@ -76,13 +76,15 @@ public class StlWriter implements SubtitleWriter {
         System.arraycopy(df.getBytes(), 0, header, 230, 6);
 
         // Total Number of Text and Timing Information (TTI) blocks - Position 238-242
-        // TODO —> count TTI from STL if it is an stl
         var ttiCount = StringUtils.leftPad(""+subtitleObject.getCues().size(), 6, "0");
         if (subtitleObject instanceof StlObject) {
             var stlSubtitleObject = (StlObject) subtitleObject;
             ttiCount = StringUtils.leftPad(""+stlSubtitleObject.getTtis().size(), 6, "0");
         }
         System.arraycopy(ttiCount.getBytes(), 0, header, 238, 6);
+
+        // Total Number of Subtitles - Position 243-247
+        System.arraycopy(StringUtils.leftPad(""+subtitleObject.getCues().size(), 6 , '0').getBytes(), 0, header, 238, 6);
 
         // Write the header
         dos.write(header);

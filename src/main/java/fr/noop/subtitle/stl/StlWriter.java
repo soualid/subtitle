@@ -216,7 +216,7 @@ public class StlWriter implements SubtitleWriter {
             ttiBlock[1] = (byte) (subtitleNumber - 1);
 
             // Extension Block Number (EBN)
-            ttiBlock[3] = (byte) 0xFF;
+            ttiBlock[3] = (byte) 0xFE;
 
             // Start Time (TCI)
             ttiBlock[5] = (byte) (start.getHour());

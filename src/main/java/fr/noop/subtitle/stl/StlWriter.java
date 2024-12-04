@@ -63,7 +63,7 @@ public class StlWriter implements SubtitleWriter {
         // Original Program Title (OPT) - Position 15-47
         System.arraycopy("                                ".getBytes(), 0, header, 15, 32);
         String title = (String) subtitleObject.getProperty(SubtitleObject.Property.TITLE);
-        if (title != null) {
+        if (title != null && StringUtils.isNotBlank(title)) {
             byte[] titleBytes = title.getBytes(StandardCharsets.ISO_8859_1);
             int length = Math.min(titleBytes.length, 33);
             System.arraycopy(titleBytes, 0, header, 15, length);

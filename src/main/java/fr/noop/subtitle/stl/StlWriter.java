@@ -61,7 +61,7 @@ public class StlWriter implements SubtitleWriter {
         }
 
         // Original Program Title (OPT) - Position 15-47
-        System.arraycopy("                                ".getBytes(), 0, header, 15, 32);
+        System.arraycopy("                                 ".getBytes(), 0, header, 15, 33);
         String title = (String) subtitleObject.getProperty(SubtitleObject.Property.TITLE);
         if (title != null && StringUtils.isNotBlank(title)) {
             byte[] titleBytes = title.getBytes(StandardCharsets.ISO_8859_1);
@@ -70,19 +70,19 @@ public class StlWriter implements SubtitleWriter {
         }
 
         // 48..79 32 Original Episode Title
-        System.arraycopy("                                ".getBytes(), 0, header, 48, 32);
+        System.arraycopy("                                  ".getBytes(), 0, header, 48, 33);
 
         // 80..111 32 Translated Programme Title TPT
-        System.arraycopy("                                ".getBytes(), 0, header, 80, 32);
+        System.arraycopy("                                 ".getBytes(), 0, header, 80, 33);
 
         // 112..143 32 Translated Episode Title TET
-        System.arraycopy("                                ".getBytes(), 0, header, 112, 32);
+        System.arraycopy("                                 ".getBytes(), 0, header, 112, 33);
 
         // 144..175 32 Translator's Name TN
-        System.arraycopy("                                ".getBytes(), 0, header, 144, 32);
+        System.arraycopy("                                 ".getBytes(), 0, header, 144, 33);
 
         // 176..207 32 Translator's Contact Details TCD
-        System.arraycopy("                                ".getBytes(), 0, header, 176, 32);
+        System.arraycopy("                                 ".getBytes(), 0, header, 176, 33);
 
         // Creation Date (CD) - Position 224-229
         var df = new SimpleDateFormat("yyMMdd").format(System.currentTimeMillis());

@@ -72,6 +72,18 @@ public class StlWriter implements SubtitleWriter {
         // 48..79 32 Original Episode Title
         System.arraycopy("                                ".getBytes(), 0, header, 48, 32);
 
+        // 80..111 32 Translated Programme Title TPT
+        System.arraycopy("                                ".getBytes(), 0, header, 80, 32);
+
+        // 112..143 32 Translated Episode Title TET
+        System.arraycopy("                                ".getBytes(), 0, header, 112, 32);
+
+        // 144..175 32 Translator's Name TN
+        System.arraycopy("                                ".getBytes(), 0, header, 144, 32);
+
+        // 176..207 32 Translator's Contact Details TCD
+        System.arraycopy("                                ".getBytes(), 0, header, 176, 32);
+
         // Creation Date (CD) - Position 224-229
         var df = new SimpleDateFormat("yyMMdd").format(System.currentTimeMillis());
         System.arraycopy(df.getBytes(), 0, header, 224, 6);

@@ -61,12 +61,16 @@ public class StlWriter implements SubtitleWriter {
         }
 
         // Original Program Title (OPT) - Position 15-47
+        System.arraycopy("                                ".getBytes(), 0, header, 15, 32);
         String title = (String) subtitleObject.getProperty(SubtitleObject.Property.TITLE);
         if (title != null) {
             byte[] titleBytes = title.getBytes(StandardCharsets.ISO_8859_1);
             int length = Math.min(titleBytes.length, 33);
             System.arraycopy(titleBytes, 0, header, 15, length);
         }
+
+        // 48..79 32 Original Episode Title
+        System.arraycopy("                                ".getBytes(), 0, header, 48, 32);
 
         // Creation Date (CD) - Position 224-229
         var df = new SimpleDateFormat("yyMMdd").format(System.currentTimeMillis());

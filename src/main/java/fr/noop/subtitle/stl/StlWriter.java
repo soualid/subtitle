@@ -84,12 +84,19 @@ public class StlWriter implements SubtitleWriter {
         // 176..207 32 Translator's Contact Details TCD
         System.arraycopy("                                 ".getBytes(), 0, header, 176, 33);
 
+        // 208..223 16 Subtitle List Reference Code SLR
+        System.arraycopy("                ".getBytes(), 0, header, 208, 16);
+
         // Creation Date (CD) - Position 224-229
         var df = new SimpleDateFormat("yyMMdd").format(System.currentTimeMillis());
         System.arraycopy(df.getBytes(), 0, header, 224, 6);
 
         // Revision Date (RD) - Position 230-235
         System.arraycopy(df.getBytes(), 0, header, 230, 6);
+
+
+        // 236..237 2 Revision number RN
+        System.arraycopy( "01".getBytes(), 0, header, 236, 2);
 
         // Total Number of Text and Timing Information (TTI) blocks - Position 238-242
         var ttiCount = StringUtils.leftPad(""+subtitleObject.getCues().size(), 6, "0");
@@ -101,6 +108,9 @@ public class StlWriter implements SubtitleWriter {
 
         // Total Number of Subtitles - Position 243-247
         System.arraycopy(StringUtils.leftPad(""+subtitleObject.getCues().size(), 6 , '0').getBytes(), 0, header, 243, 6);
+
+        // 248..250 3 Total Number of Subtitle Groups TNG
+        System.arraycopy(StringUtils.leftPad("001", 6 , '0').getBytes(), 0, header, 248, 3);
 
         // Maximum Number of Displayable Characters in any text row - 251..252
         // TODO
@@ -133,14 +143,23 @@ public class StlWriter implements SubtitleWriter {
                 ).getBytes(), 0, header, 264, 8);
 
         // 272 1 Total Number of Disks TND
-        System.arraycopy( new byte[] { 0x1 }, 0, header, 272, 1);
+        System.arraycopy( "1".getBytes(), 0, header, 272, 1);
 
         // 273 1 Disk Sequence Number DSN
-        System.arraycopy( new byte[] { 0x1 }, 0, header, 273, 1);
+        System.arraycopy( "1".getBytes(), 0, header, 273, 1);
 
         // 274..276 3 Country of Origin CO
         // TODO
         System.arraycopy( "FRA".getBytes(), 0, header, 274, 3);
+
+        // 277..308 32 Publisher PUB
+        System.arraycopy("                                 ".getBytes(), 0, header, 277, 33);
+
+        // 309..340 32 Editor's Name EN
+        System.arraycopy("                                 ".getBytes(), 0, header, 309, 33);
+
+        // 341..372 32 Editor's Contact Details ECD
+        System.arraycopy("                                 ".getBytes(), 0, header, 341, 33);
 
         // Write the header
         dos.write(header);

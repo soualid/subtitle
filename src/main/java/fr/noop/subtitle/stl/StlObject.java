@@ -23,6 +23,12 @@ public class StlObject extends BaseSubtitleObject {
     private StlGsi gsi;
     List<StlTti> ttis = new ArrayList<>();
 
+
+
+    public StlObject() {
+
+    }
+
     public StlObject(StlGsi gsi) {
         this.setProperty(Property.TITLE, gsi.getOpt());
         this.setProperty(Property.FRAME_RATE, gsi.getDfc().getFrameRate());

@@ -39,6 +39,10 @@ public class StlCue extends BaseSubtitleCue implements SubtitleRegionCue {
     private int horizontalPosition; // Horizontal position in percentage
     private static final int MAX_VERTICAL_UNITS = 23;
 
+    public StlCue() {
+
+    }
+
     public StlCue(StlTti tti) {
         super(tti.getTci(), tti.getTco());
         this.addTti(tti);

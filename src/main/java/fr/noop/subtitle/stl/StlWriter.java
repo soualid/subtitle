@@ -294,14 +294,14 @@ public class StlWriter implements SubtitleWriter {
 
     private char getColorControlCode(String color) {
         switch (color.toLowerCase()) {
-            case "white": return 0x00; // White
+            case "black": return 0x00; // Black
             case "red": return 0x01;   // Red
             case "green": return 0x02; // Green
-            case "blue": return 0x03;  // Blue
-            case "cyan": return 0x04;  // Cyan
-            case "yellow": return 0x05; // Yellow
-            case "magenta": return 0x06; // Magenta
-            default: return 0x07;      // Default to black
+            case "yellow": return 0x03; // Yellow
+            case "blue": return 0x04;  // Blue
+            case "magenta": return 0x05; // Magenta
+            case "cyan": return 0x06;  // Cyan
+            default: return 0x07;      // Default to white
         }
     }
 

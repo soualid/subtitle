@@ -25,6 +25,10 @@ public class SubtitleRegion {
         BOTTOM;
     }
 
+    public SubtitleRegion() {
+
+    }
+
     private float x; // x coordinate of the region
     private float y; // y coordinate of the region
     private float width; // Width of the region

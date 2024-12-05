@@ -59,6 +59,13 @@ public class StlCue extends BaseSubtitleCue implements SubtitleRegionCue {
         this.addText(tti);
     }
 
+    public void recomputeLines() {
+        setLines(new ArrayList<>());
+        for (StlTti tti: this.ttis) {
+            this.addText(tti);
+        }
+    }
+
     /**
      * Build cue text from tti text field
      */

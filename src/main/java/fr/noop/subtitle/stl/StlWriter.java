@@ -196,6 +196,9 @@ public class StlWriter implements SubtitleWriter {
                     textToAdd = applyColor(textToAdd, styledText.getStyle().getColor());
                 }
 
+                // remove these chars since they're added afterward during box creation
+                textToAdd = textToAdd.replaceAll("[\\u008A\\n]", "");
+
                 textToAdd = createBox(textToAdd);
 
                 textBuilder.append((char) 0x0B);

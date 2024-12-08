@@ -203,10 +203,6 @@ public class StlWriter implements SubtitleWriter {
 
                 textBuilder.append((char) 0x0B);
                 textBuilder.append(textToAdd);
-                if (i < lines.size() - 1) {
-                    textBuilder.append((char) 0x0A);
-                    textBuilder.append((char) 0x8A);
-                }
             }
 
             textBuilder.append((char) 0x0A);

@@ -51,14 +51,14 @@ public class StlObject extends BaseSubtitleObject {
         this.ttis = ttis;
     }
 
-    public void addTti(StlTti tti, boolean ignoreTcf) {
+    public void addTti(StlTti tti, boolean ignoreTcf, boolean includeEmptyCues) {
         this.ttis.add(tti);
 
         // Create cue from tti
         StlCue cue = new StlCue(tti);
 
         // Do not create cue if tti text field is empty
-        if (cue.isEmpty()) {
+        if (cue.isEmpty() && !includeEmptyCues) {
             return;
         }
 

@@ -212,7 +212,7 @@ public class StlWriter implements SubtitleWriter {
         byte[] textBytes = textBuilder.toString().getBytes(new Iso6937Charset("ISO-6937-2", new String[]{}));
         int textOffset = 0;
 
-        while (textOffset < textBytes.length) {
+        do {
             byte[] ttiBlock = new byte[TTI_BLOCK_SIZE];
 
             // Subtitle Group Number (SGN)
@@ -279,7 +279,7 @@ public class StlWriter implements SubtitleWriter {
 
             // Write the TTI block
             dos.write(ttiBlock);
-        }
+        } while (textOffset < textBytes.length)
     }
 
     private String applyColor(String text, String color) {

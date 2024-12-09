@@ -191,11 +191,12 @@ public class StlWriter implements SubtitleWriter {
             for (var text : line.getTexts()) {
 
                 var textToAdd = text.toString();
-                textToAdd = createBox(textToAdd);
                 if (text.isStyled()) {
                     var styledText = (SubtitleStyledText) text;
                     textToAdd = applyColor(textToAdd, styledText.getStyle().getColor());
                 }
+
+                textToAdd = createBox(textToAdd);
 
                 // remove these chars since they're added afterward during box creation
                 textToAdd = textToAdd.replaceAll("[\\u008A\\n]", "");

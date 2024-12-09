@@ -219,7 +219,7 @@ public class StlWriter implements SubtitleWriter {
             ttiBlock[0] = 0x00;
 
             // Subtitle Number (SN)
-            ttiBlock[1] = (byte) (subtitleNumber - 1);
+            ttiBlock[1] = (byte) subtitleNumber;
 
             // Extension Block Number (EBN)
             ttiBlock[3] = (byte) 0xFF;

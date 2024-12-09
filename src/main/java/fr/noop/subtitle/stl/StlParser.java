@@ -36,7 +36,7 @@ public class StlParser implements SubtitleParser {
     }
     
     public StlObject parse(InputStream is) throws SubtitleParsingException {
-    	return parse(is, true, false, false);
+    	return parse(is, true, false, false, false);
     }
 
     public StlObject parse(InputStream is,

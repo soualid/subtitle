@@ -239,6 +239,10 @@ public class StlWriter implements SubtitleWriter {
 
             // Vertical Position (VP)
             ttiBlock[13] = getVerticalPosition(lines.size()); // Calculate vertical position
+            if (cue instanceof StlCue) {
+                var stlCue = (StlCue) cue;
+                ttiBlock[13] = (byte) stlCue.getTtis().get(0).getVp();
+            }
 
             // Justification Code (JC)
             ttiBlock[14] = 0x02; // Center justification

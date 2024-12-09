@@ -287,7 +287,9 @@ public class StlWriter implements SubtitleWriter {
     }
 
     private String createBox(String text) {
-        return (char) 0x0B + "" + (char) 0x0B + "" + text;
+        // double height
+        // 2x start box
+        return (char) 0x0D + "" + (char) 0x0B + "" + (char) 0x0B + "" + text;
     }
 
     private char getColorControlCode(String color) {

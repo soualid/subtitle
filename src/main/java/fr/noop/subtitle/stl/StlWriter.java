@@ -279,7 +279,7 @@ public class StlWriter implements SubtitleWriter {
 
             // Write the TTI block
             dos.write(ttiBlock);
-        } while (textOffset < textBytes.length)
+        } while (textOffset < textBytes.length);
     }
 
     private String applyColor(String text, String color) {

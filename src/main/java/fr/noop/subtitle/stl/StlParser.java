@@ -47,6 +47,13 @@ public class StlParser implements SubtitleParser {
     public StlObject parse(InputStream is,
                            boolean strict,
                            boolean skipUserdataTf,
+                           boolean ignoreTcf) throws SubtitleParsingException {
+        return parse(is, strict, skipUserdataTf, ignoreTcf, false);
+    }
+
+    public StlObject parse(InputStream is,
+                           boolean strict,
+                           boolean skipUserdataTf,
                            boolean ignoreTcf,
                            boolean includeEmptyCues) throws SubtitleParsingException {
         BufferedInputStream bis = new BufferedInputStream(is);

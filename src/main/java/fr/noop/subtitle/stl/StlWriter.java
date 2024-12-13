@@ -89,14 +89,14 @@ public class StlWriter implements SubtitleWriter {
 
         // Creation Date (CD) - Position 224-229
         var df = new SimpleDateFormat("yyMMdd").format(System.currentTimeMillis());
-        System.arraycopy(df.getBytes(), 0, header, 223, 6);
+        System.arraycopy(df.getBytes(), 0, header, 224, 6);
 
         // Revision Date (RD) - Position 230-235
-        System.arraycopy(df.getBytes(), 0, header, 229, 6);
+        System.arraycopy(df.getBytes(), 0, header, 230, 6);
 
 
         // 236..237 2 Revision number RN
-        System.arraycopy( "01".getBytes(), 0, header, 235, 2);
+        System.arraycopy( "01".getBytes(), 0, header, 236, 2);
 
         // Total Number of Text and Timing Information (TTI) blocks - Position 238-242
         var ttiCount = StringUtils.leftPad(""+subtitleObject.getCues().size(), 6, "0");

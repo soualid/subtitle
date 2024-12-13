@@ -55,13 +55,13 @@ public class StlWriter implements SubtitleWriter {
         // Language Code (LC) - Position 13-14
         String languageCode = (String) subtitleObject.getProperty(SubtitleObject.Property.LANGUAGE);
         if (languageCode != null && languageCode.length() == 2) {
-            System.arraycopy(languageCode.getBytes(StandardCharsets.US_ASCII), 0, header, 14, 2);
+            System.arraycopy(languageCode.getBytes(StandardCharsets.US_ASCII), 0, header, 13, 2);
         } else {
-            System.arraycopy("0F".getBytes(StandardCharsets.US_ASCII), 0, header, 14, 2); // Default: '0F' (French)
+            System.arraycopy("0F".getBytes(StandardCharsets.US_ASCII), 0, header, 13, 2); // Default: '0F' (French)
         }
 
         // Original Program Title (OPT) - Position 15-47
-        System.arraycopy("                                 ".getBytes(), 0, header, 15, 33);
+        System.arraycopy("                                 ".getBytes(), 0, header, 14, 33);
         String title = (String) subtitleObject.getProperty(SubtitleObject.Property.TITLE);
         if (title != null && StringUtils.isNotBlank(title)) {
             byte[] titleBytes = title.getBytes(StandardCharsets.ISO_8859_1);
@@ -70,33 +70,33 @@ public class StlWriter implements SubtitleWriter {
         }
 
         // 48..79 32 Original Episode Title
-        System.arraycopy("                                  ".getBytes(), 0, header, 48, 33);
+        System.arraycopy("                                  ".getBytes(), 0, header, 47, 33);
 
         // 80..111 32 Translated Programme Title TPT
-        System.arraycopy("                                 ".getBytes(), 0, header, 80, 33);
+        System.arraycopy("                                 ".getBytes(), 0, header, 79, 33);
 
         // 112..143 32 Translated Episode Title TET
-        System.arraycopy("                                 ".getBytes(), 0, header, 112, 33);
+        System.arraycopy("                                 ".getBytes(), 0, header, 111, 33);
 
         // 144..175 32 Translator's Name TN
-        System.arraycopy("                                 ".getBytes(), 0, header, 144, 33);
+        System.arraycopy("                                 ".getBytes(), 0, header, 143, 33);
 
         // 176..207 32 Translator's Contact Details TCD
-        System.arraycopy("                                 ".getBytes(), 0, header, 176, 33);
+        System.arraycopy("                                 ".getBytes(), 0, header, 175, 33);
 
         // 208..223 16 Subtitle List Reference Code SLR
-        System.arraycopy("                ".getBytes(), 0, header, 208, 16);
+        System.arraycopy("                ".getBytes(), 0, header, 207, 16);
 
         // Creation Date (CD) - Position 224-229
         var df = new SimpleDateFormat("yyMMdd").format(System.currentTimeMillis());
-        System.arraycopy(df.getBytes(), 0, header, 224, 6);
+        System.arraycopy(df.getBytes(), 0, header, 223, 6);
 
         // Revision Date (RD) - Position 230-235
-        System.arraycopy(df.getBytes(), 0, header, 230, 6);
+        System.arraycopy(df.getBytes(), 0, header, 229, 6);
 
 
         // 236..237 2 Revision number RN
-        System.arraycopy( "01".getBytes(), 0, header, 236, 2);
+        System.arraycopy( "01".getBytes(), 0, header, 235, 2);
 
         // Total Number of Text and Timing Information (TTI) blocks - Position 238-242
         var ttiCount = StringUtils.leftPad(""+subtitleObject.getCues().size(), 6, "0");
@@ -104,7 +104,7 @@ public class StlWriter implements SubtitleWriter {
             var stlSubtitleObject = (StlObject) subtitleObject;
             ttiCount = StringUtils.leftPad(""+stlSubtitleObject.getTtis().size(), 6, "0");
         }
-        System.arraycopy(ttiCount.getBytes(), 0, header, 238, 6);
+        System.arraycopy(ttiCount.getBytes(), 0, header, 237, 6);
 
         // Total Number of Subtitles - Position 243-247
         System.arraycopy(StringUtils.leftPad(""+subtitleObject.getCues().size(), 6 , '0').getBytes(), 0, header, 243, 6);

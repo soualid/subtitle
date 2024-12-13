@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,31 +62,37 @@ public class StlWriter implements SubtitleWriter {
         }
 
         // Original Program Title (OPT) - Position 15-47
-        System.arraycopy("                                 ".getBytes(), 0, header, 14, 33);
+        Arrays.fill(header, 14, 46, (byte) 0x20);
         String title = (String) subtitleObject.getProperty(SubtitleObject.Property.TITLE);
-        if (title != null && StringUtils.isNotBlank(title)) {
+        if (StringUtils.isNotBlank(title)) {
             byte[] titleBytes = title.getBytes(StandardCharsets.ISO_8859_1);
             int length = Math.min(titleBytes.length, 33);
             System.arraycopy(titleBytes, 0, header, 15, length);
         }
 
         // 48..79 32 Original Episode Title
-        System.arraycopy("                                  ".getBytes(), 0, header, 47, 33);
+        Arrays.fill(header, 47, 78, (byte) 0x20);
+        //System.arraycopy("                                  ".getBytes(), 0, header, 47, 33);
 
         // 80..111 32 Translated Programme Title TPT
-        System.arraycopy("                                 ".getBytes(), 0, header, 79, 33);
+        Arrays.fill(header, 79, 110, (byte) 0x20);
+        //System.arraycopy("                                 ".getBytes(), 0, header, 79, 33);
 
         // 112..143 32 Translated Episode Title TET
-        System.arraycopy("                                 ".getBytes(), 0, header, 111, 33);
+        Arrays.fill(header, 111, 142, (byte) 0x20);
+        //System.arraycopy("                                 ".getBytes(), 0, header, 111, 33);
 
         // 144..175 32 Translator's Name TN
-        System.arraycopy("                                 ".getBytes(), 0, header, 143, 33);
+        Arrays.fill(header, 143, 174, (byte) 0x20);
+        //System.arraycopy("                                 ".getBytes(), 0, header, 143, 33);
 
         // 176..207 32 Translator's Contact Details TCD
-        System.arraycopy("                                 ".getBytes(), 0, header, 175, 33);
+        Arrays.fill(header, 175, 206, (byte) 0x20);
+        //System.arraycopy("                                 ".getBytes(), 0, header, 175, 33);
 
         // 208..223 16 Subtitle List Reference Code SLR
-        System.arraycopy("                ".getBytes(), 0, header, 208, 16);
+        Arrays.fill(header, 207, 222, (byte) 0x20);
+        //System.arraycopy("                ".getBytes(), 0, header, 208, 16);
 
         // Creation Date (CD) - Position 224-229
         var df = new SimpleDateFormat("yyMMdd").format(System.currentTimeMillis());

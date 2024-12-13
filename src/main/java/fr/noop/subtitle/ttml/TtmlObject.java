@@ -102,11 +102,9 @@ public class TtmlObject  extends BaseSubtitleObject {
             this.addCue(ttmlCue);
         }
 
-        if (this.regions.size() == 0) {
-            String regionId = String.format("region-%d", this.regions.size() + 1);
-            this.regionMapping.put("defaultRegion", regionId);
-            this.regions.put("defaultRegion", new SubtitleRegion(50, 45));
-        }
+        String regionId = String.format("region-%d", this.regions.size() + 1);
+        this.regionMapping.put("defaultRegion", regionId);
+        this.regions.put("defaultRegion", new SubtitleRegion(50, 45));
         if (this.styles.size() == 0) {
             SubtitleStyle style = new SubtitleStyle();
             style.setTextAlign(SubtitleStyle.TextAlign.CENTER);

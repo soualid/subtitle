@@ -24,7 +24,7 @@ public class Convert {
     private Options options = new Options();
 
     private enum ConvertFormat {
-        TTML(new String[] {"xml"}),
+        TTML(new String[] {"xml", "ttml"}),
         SAMI(new String[] {"smi"}),
         VTT(new String[] {"vtt"}),
         SRT(new String[] {"srt"}),

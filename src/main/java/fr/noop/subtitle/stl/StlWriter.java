@@ -62,7 +62,7 @@ public class StlWriter implements SubtitleWriter {
         }
 
         // Original Program Title (OPT) - Position 15-47
-        Arrays.fill(header, 14, 46, (byte) 0x20);
+        Arrays.fill(header, 15, 47, (byte) 0x20);
         String title = (String) subtitleObject.getProperty(SubtitleObject.Property.TITLE);
         if (StringUtils.isNotBlank(title)) {
             byte[] titleBytes = title.getBytes(StandardCharsets.ISO_8859_1);
@@ -71,27 +71,27 @@ public class StlWriter implements SubtitleWriter {
         }
 
         // 48..79 32 Original Episode Title
-        Arrays.fill(header, 47, 78, (byte) 0x20);
+        Arrays.fill(header, 48, 79, (byte) 0x20);
         //System.arraycopy("                                  ".getBytes(), 0, header, 47, 33);
 
         // 80..111 32 Translated Programme Title TPT
-        Arrays.fill(header, 79, 110, (byte) 0x20);
+        Arrays.fill(header, 80, 111, (byte) 0x20);
         //System.arraycopy("                                 ".getBytes(), 0, header, 79, 33);
 
         // 112..143 32 Translated Episode Title TET
-        Arrays.fill(header, 111, 142, (byte) 0x20);
+        Arrays.fill(header, 112, 143, (byte) 0x20);
         //System.arraycopy("                                 ".getBytes(), 0, header, 111, 33);
 
         // 144..175 32 Translator's Name TN
-        Arrays.fill(header, 143, 174, (byte) 0x20);
+        Arrays.fill(header, 144, 175, (byte) 0x20);
         //System.arraycopy("                                 ".getBytes(), 0, header, 143, 33);
 
         // 176..207 32 Translator's Contact Details TCD
-        Arrays.fill(header, 175, 206, (byte) 0x20);
+        Arrays.fill(header, 176, 207, (byte) 0x20);
         //System.arraycopy("                                 ".getBytes(), 0, header, 175, 33);
 
         // 208..223 16 Subtitle List Reference Code SLR
-        Arrays.fill(header, 207, 222, (byte) 0x20);
+        Arrays.fill(header, 208, 223, (byte) 0x20);
         //System.arraycopy("                ".getBytes(), 0, header, 208, 16);
 
         // Creation Date (CD) - Position 224-229

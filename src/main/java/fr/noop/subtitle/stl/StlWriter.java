@@ -85,7 +85,7 @@ public class StlWriter implements SubtitleWriter {
         System.arraycopy("                                 ".getBytes(), 0, header, 175, 33);
 
         // 208..223 16 Subtitle List Reference Code SLR
-        System.arraycopy("                ".getBytes(), 0, header, 207, 16);
+        System.arraycopy("                ".getBytes(), 0, header, 208, 16);
 
         // Creation Date (CD) - Position 224-229
         var df = new SimpleDateFormat("yyMMdd").format(System.currentTimeMillis());

@@ -11,7 +11,9 @@
 package fr.noop.subtitle.ttml;
 
 import fr.noop.subtitle.model.*;
+import fr.noop.subtitle.stl.StlCue;
 import fr.noop.subtitle.util.*;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -63,6 +65,12 @@ public class TtmlWriter implements SubtitleWriter {
                         NS_TTP,
                         "frameRate",
                         String.valueOf(ttmlObject.getProperty(SubtitleObject.Property.FRAME_RATE)));
+            }
+            if (ttmlObject.hasProperty(SubtitleObject.Property.CELL_RESOLUTION)) {
+                xsw.writeAttribute(
+                        NS_TTP,
+                        "cellResolution",
+                        String.valueOf(ttmlObject.getProperty(SubtitleObject.Property.CELL_RESOLUTION)));
             }
 
             // Write header
@@ -137,7 +145,6 @@ public class TtmlWriter implements SubtitleWriter {
             xsw.writeStartElement("style");
             xsw.writeAttribute(NS_XML, "id", styleId);
 
-
             if (style.getColor() != null) {
                 xsw.writeAttribute(NS_TTS, "color", style.getColor());
             }
@@ -148,15 +155,18 @@ public class TtmlWriter implements SubtitleWriter {
             if (style.getFontFamily() != null) {
                 xsw.writeAttribute(NS_TTS, "fontFamily", style.getFontFamily());
             }
+            if (style.getFontSize() != null) {
+                xsw.writeAttribute(NS_TTS, "fontSize", style.getFontSize());
+            }
 
             // Text align
             if (style.getTextAlign() != null) {
                 String textAlign = "center";
 
                 if (style.getTextAlign() == SubtitleStyle.TextAlign.LEFT) {
-                    textAlign = "left";
+                    textAlign = "start";
                 } else if (style.getTextAlign() == SubtitleStyle.TextAlign.RIGHT) {
-                    textAlign = "right";
+                    textAlign = "end";
                 }
 
                 xsw.writeAttribute(NS_TTS, "textAlign", textAlign);
@@ -193,8 +203,8 @@ public class TtmlWriter implements SubtitleWriter {
             xsw.writeAttribute(NS_XML, "id", regionId);
 
             // With US locale to format number with dot instead of comma
-            xsw.writeAttribute(NS_TTS, "origin", String.format(Locale.US, "0%% %.2f%%", region.getY()));
-            xsw.writeAttribute(NS_TTS, "extent", String.format(Locale.US, "100%% %.2f%%", region.getHeight()));
+            xsw.writeAttribute(NS_TTS, "origin", String.format(Locale.US, "%.2f%% %.2f%%", region.getX(), region.getY()));
+            xsw.writeAttribute(NS_TTS, "extent", String.format(Locale.US, "%.2f%% %.2f%%", region.getWidth(), region.getHeight()));
 
             // Vertical align to bottom
             xsw.writeAttribute(NS_TTS, "displayAlign", "after");
@@ -210,8 +220,12 @@ public class TtmlWriter implements SubtitleWriter {
     private void writeCues(TtmlObject ttmlObject, XMLStreamWriter xsw) throws XMLStreamException {
         // Start of cues
         xsw.writeStartElement("body");
-        xsw.writeAttribute("style", "defaultStyle");
-        xsw.writeAttribute("region", "defaultRegion");
+        if (ttmlObject.getStyles().containsKey("defaultStyle")) {
+            xsw.writeAttribute("style", "defaultStyle");
+        }
+        if (ttmlObject.getRegions().containsKey("defaultRegion")) {
+            xsw.writeAttribute("region", "defaultRegion");
+        }
         xsw.writeStartElement("div");
 
         for (SubtitleCue cue : ttmlObject.getCues()) {
@@ -219,6 +233,9 @@ public class TtmlWriter implements SubtitleWriter {
 
             // Start ttmlCue
             xsw.writeStartElement("p");
+            if (ttmlCue.getStyle() != null) {
+                xsw.writeAttribute("style", ttmlObject.getStyleId(ttmlCue.getStyle()));
+            }
 
             xsw.writeAttribute(NS_XML, "id", ttmlCue.getId());
 
@@ -233,29 +250,37 @@ public class TtmlWriter implements SubtitleWriter {
 
             // Write ttmlCue text
             int lineIndex = 0;
+            var additionalBrs = 0;
 
             for (SubtitleLine line: ttmlCue.getLines()) {
                 lineIndex++;
-
                 for (SubtitleText text: line.getTexts()) {
                     xsw.writeStartElement("span");
 
                     if (text instanceof SubtitleStyledText) {
+                        var styledText = (SubtitleStyledText) text;
                         // Apply a style on this text
-                        xsw.writeAttribute("style", ttmlObject.getStyleId(((SubtitleStyledText) text).getStyle()));
+                        var styleId = ttmlObject.getStyleId(styledText.getStyle());
+                        if (styleId != null && !"defaultStyle".equals(styleId)) {
+                            xsw.writeAttribute("style", styleId + " WhiteDefaultSpanStyle");
+                        }
+                    } else {
+                        xsw.writeAttribute("style", "WhiteDefaultSpanStyle");
                     }
 
-                    xsw.writeCharacters(text.toString());
+                    additionalBrs = StringUtils.countMatches(text.toString(), "\n");
+                    xsw.writeCharacters(text.toString().replace("\n", ""));
+
                     xsw.writeEndElement();
                 }
 
                 // Add line break between rows
-                if (lineIndex < ttmlCue.getLines().size()) {
-                    xsw.writeStartElement("br");
-                    xsw.writeEndElement();
-                }
+                xsw.writeStartElement("br");
+                xsw.writeEndElement();
             }
-
+            for (var i = 0; i < additionalBrs; i++) {
+                xsw.writeEmptyElement("br");
+            }
             // End of ttmlCue
             xsw.writeEndElement();
         }

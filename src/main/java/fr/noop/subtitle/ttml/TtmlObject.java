@@ -15,10 +15,15 @@ import fr.noop.subtitle.model.SubtitleCue;
 import fr.noop.subtitle.model.SubtitleLine;
 import fr.noop.subtitle.model.SubtitleObject;
 import fr.noop.subtitle.model.SubtitleText;
+import fr.noop.subtitle.stl.StlCue;
+import fr.noop.subtitle.stl.StlDefaultRegion;
+import fr.noop.subtitle.stl.StlObject;
 import fr.noop.subtitle.stl.StlTti;
+import fr.noop.subtitle.util.SubtitlePlainText;
 import fr.noop.subtitle.util.SubtitleRegion;
 import fr.noop.subtitle.util.SubtitleStyle;
 import fr.noop.subtitle.util.SubtitleStyledText;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +34,7 @@ import java.util.Map;
  * Created by clebeaupin on 11/10/15.
  */
 public class TtmlObject  extends BaseSubtitleObject {
+
     // Style signature => style id
     private Map<String, String> styleMapping = new HashMap<>();
 
@@ -48,6 +54,45 @@ public class TtmlObject  extends BaseSubtitleObject {
     public TtmlObject(SubtitleObject subtitleObject) {
         super();
 
+        if (subtitleObject instanceof StlObject) {
+            this.setProperty(Property.CELL_RESOLUTION, "50 30");
+
+            var leftAlignStyle = new SubtitleStyle();
+            leftAlignStyle.setTextAlign(SubtitleStyle.TextAlign.LEFT);
+            this.setStyle("alignLeft", leftAlignStyle);
+
+            var rightAlignStyle = new SubtitleStyle();
+            rightAlignStyle.setTextAlign(SubtitleStyle.TextAlign.RIGHT);
+            this.setStyle("alignRight", rightAlignStyle);
+
+            var centerAlignStyle = new SubtitleStyle();
+            centerAlignStyle.setTextAlign(SubtitleStyle.TextAlign.CENTER);
+            this.setStyle("alignCenter", centerAlignStyle);
+
+            var colors = new String[] {"white", "yellow", "cyan", "green", "magenta", "red", "blue"};
+            for (int i=0; i<colors.length; i++) {
+                var style = new SubtitleStyle();
+                style.setColor(colors[i]);
+                this.setStyle(StringUtils.capitalize(colors[i]), style);
+            }
+
+            var defaultStyle = new SubtitleStyle();
+            defaultStyle.setColor("white");
+            defaultStyle.setFontSize("1c 2c");
+            this.setStyle("globalDefaultStyle", defaultStyle);
+
+            defaultStyle = new SubtitleStyle();
+            defaultStyle.setBackgroundColor("black");
+            defaultStyle.setFontFamily("monospaceSansSerif");
+            defaultStyle.setLineHeight("normal");
+            this.setStyle("WhiteDefaultSpanStyle", defaultStyle);
+
+            var defaultRegion = new StlDefaultRegion();
+            this.setRegion("defaultRegion", defaultRegion);
+            this.regionMapping.put(buildRegionSignature(defaultRegion), "defaultRegion");
+            this.regions.put("defaultRegion", defaultRegion);
+        }
+
         for (Map.Entry<Property, Object> entry : subtitleObject.getProperties().entrySet()) {
             this.setProperty(entry.getKey(), entry.getValue());
         }
@@ -55,46 +100,52 @@ public class TtmlObject  extends BaseSubtitleObject {
         for (int cueIndex=0; cueIndex<subtitleObject.getCues().size(); cueIndex++) {
             SubtitleCue cue = subtitleObject.getCues().get(cueIndex);
             TtmlCue ttmlCue = new TtmlCue(cue);
+            if (cue instanceof StlCue) {
+                // We handle STL cue specially
 
-            // Register cue region
-            SubtitleRegion region = ttmlCue.getRegion();
+                System.out.println("cue: " + ttmlCue);
+            } else {
+                // Register cue region
+                SubtitleRegion region = ttmlCue.getRegion();
 
-            if (region != null) {
-                // Region could be null
-                String regionSignature = this.buildRegionSignature(region);
+                if (region != null) {
+                    // Region could be null
+                    String regionSignature = this.buildRegionSignature(region);
 
-                if (!this.regionMapping.containsKey(regionSignature)) {
-                    // Region is not registered
-                    // Build a new region id
-                    String regionId = String.format("region-%d", this.regions.size() + 1);
-                    this.regionMapping.put(regionSignature, regionId);
-                    this.regions.put(regionId, new SubtitleRegion(region));
-                }
-            }
-
-            // Register cue styles
-            for (SubtitleLine line : ttmlCue.getLines()) {
-                for (SubtitleText text : line.getTexts()) {
-                    if (!(text instanceof SubtitleStyledText)) {
-                        // No style applied on this text
-                        continue;
+                    if (!this.regionMapping.containsKey(regionSignature)) {
+                        // Region is not registered
+                        // Build a new region id
+                        String regionId = String.format("region-%d", this.regions.size() + 1);
+                        this.regionMapping.put(regionSignature, regionId);
+                        this.regions.put(regionId, new SubtitleRegion(region));
                     }
-
-                    // Register text style
-                    SubtitleStyle style = ((SubtitleStyledText) text).getStyle();
-                    String styleSignature = this.buildStyleSignature(style);
-
-                    if (this.styleMapping.containsKey(styleSignature)) {
-                        // Style already registered
-                        continue;
-                    }
-
-                    // Style is not registered
-                    // Build a new style id
-                    String styleId = String.format("style-%d", this.styles.size()+1);
-                    this.styleMapping.put(styleSignature, styleId);
-                    this.styles.put(styleId, new SubtitleStyle(style));
                 }
+
+                // Register cue styles
+                for (SubtitleLine line : ttmlCue.getLines()) {
+                    for (SubtitleText text : line.getTexts()) {
+                        if (!(text instanceof SubtitleStyledText)) {
+                            // No style applied on this text
+                            continue;
+                        }
+
+                        // Register text style
+                        SubtitleStyle style = ((SubtitleStyledText) text).getStyle();
+                        String styleSignature = this.buildStyleSignature(style);
+
+                        if (this.styleMapping.containsKey(styleSignature)) {
+                            // Style already registered
+                            continue;
+                        }
+
+                        // Style is not registered
+                        // Build a new style id
+                        String styleId = String.format("style-%d", this.styles.size()+1);
+                        this.styleMapping.put(styleSignature, styleId);
+                        this.styles.put(styleId, new SubtitleStyle(style));
+                    }
+                }
+
             }
 
             // Set cue id
@@ -102,9 +153,11 @@ public class TtmlObject  extends BaseSubtitleObject {
             this.addCue(ttmlCue);
         }
 
-        String regionId = String.format("region-%d", this.regions.size() + 1);
-        this.regionMapping.put("defaultRegion", regionId);
-        this.regions.put("defaultRegion", new SubtitleRegion(50, 45));
+        if (this.regions.size() == 0) {
+            String regionId = String.format("region-%d", this.regions.size() + 1);
+            this.regionMapping.put("defaultRegion", regionId);
+            this.regions.put("defaultRegion", new SubtitleRegion(50, 45));
+        }
         if (this.styles.size() == 0) {
             SubtitleStyle style = new SubtitleStyle();
             style.setTextAlign(SubtitleStyle.TextAlign.CENTER);

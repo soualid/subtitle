@@ -26,7 +26,9 @@ public class SubtitleStyle {
         BACKGROUND_COLOR,
         COLOR,
         FONT_FAMILY,
+        LINE_HEIGHT,
         VERTICAL_POSITION_PERCENT,
+        FONT_SIZE,
         FONT_STYLE,
         FONT_WEIGHT,
         TEXT_DECORATION;
@@ -119,9 +121,15 @@ public class SubtitleStyle {
     public void setFontFamily(String fontFamily) {
         this.setProperty(Property.FONT_FAMILY, fontFamily);
     }
+    public void setLineHeight(String lineHeight) {
+        this.setProperty(Property.LINE_HEIGHT, lineHeight);
+    }
 
     public String getColor() {
         return (String) this.getProperty(Property.COLOR);
+    }
+    public String getLineHeight() {
+        return (String) this.getProperty(Property.LINE_HEIGHT);
     }
     public String getBackgroundColor() {
         return (String) this.getProperty(Property.BACKGROUND_COLOR);
@@ -132,6 +140,14 @@ public class SubtitleStyle {
 
     public void setColor(String color) {
         this.setProperty(Property.COLOR, color);
+    }
+
+    public void setFontSize(String size) {
+        this.setProperty(Property.FONT_SIZE, size);
+    }
+
+    public String getFontSize() {
+        return (String) this.getProperty(Property.FONT_SIZE);
     }
 
     public FontStyle getFontStyle() {

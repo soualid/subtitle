@@ -23,7 +23,8 @@ public interface SubtitleObject {
         DESCRIPTION,
         LANGUAGE,
         COPYRIGHT,
-        FRAME_RATE;
+        FRAME_RATE,
+        CELL_RESOLUTION
     }
 
     public boolean hasProperty(Property property);

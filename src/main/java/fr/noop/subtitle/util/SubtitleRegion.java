@@ -111,6 +111,7 @@ public class SubtitleRegion {
         this.verticalAlign = verticalAlign;
     }
 
+
     @Override
     public boolean equals(Object object) {
         //check for self-comparison

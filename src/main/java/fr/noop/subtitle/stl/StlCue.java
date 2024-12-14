@@ -107,13 +107,18 @@ public class StlCue extends BaseSubtitleCue implements SubtitleRegionCue {
                 if (cByte == 0x1d) {
                     // background
                     var background = (tfPart.charAt(cIndex-2) & 0xff);
-                    var bg = StlTti.TextColor.getEnum(background).getColor();
-                    textStyle.setBackgroundColor(bg);
-                    continue;
-                } else if ((cByte >= 0x08 && cByte <= 0x09) ||
-                        (cByte >= 0x0b && cByte <= 0x0f) ||
-                        (cByte >= 0x18 && cByte <= 0x1f) ||
-                        (cByte >= 0x86 && cByte <= 0x8f)) {
+                    try {
+                        var bg = StlTti.TextColor.getEnum(background).getColor();
+                        textStyle.setBackgroundColor(bg);
+                        continue;
+                    } catch (Exception e) {
+                        // Do nothing
+                    }
+                }
+                if ((cByte >= 0x08 && cByte <= 0x09) ||
+                    (cByte >= 0x0b && cByte <= 0x0f) ||
+                    (cByte >= 0x18 && cByte <= 0x1f) ||
+                    (cByte >= 0x86 && cByte <= 0x8f)) {
                     continue;
                 }
 

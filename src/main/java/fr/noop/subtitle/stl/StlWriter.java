@@ -3,6 +3,7 @@ package fr.noop.subtitle.stl;
 import fr.noop.charset.iso6937.Iso6937Charset;
 import fr.noop.subtitle.base.BaseSubtitleCue;
 import fr.noop.subtitle.model.*;
+import fr.noop.subtitle.util.SubtitleStyle;
 import fr.noop.subtitle.util.SubtitleStyledText;
 import fr.noop.subtitle.util.SubtitleTimeCode;
 import fr.noop.subtitle.vtt.VttCue;
@@ -201,7 +202,7 @@ public class StlWriter implements SubtitleWriter {
                 textToAdd = createBox(textToAdd);
                 if (text.isStyled()) {
                     var styledText = (SubtitleStyledText) text;
-                    textToAdd = applyColor(textToAdd, styledText.getStyle().getColor());
+                    textToAdd = applyColor(textToAdd, styledText.getStyle());
                 }
 
 
@@ -294,9 +295,13 @@ public class StlWriter implements SubtitleWriter {
         } while (textOffset < textBytes.length);
     }
 
-    private String applyColor(String text, String color) {
-        char colorControl = getColorControlCode(color);
+    private String applyColor(String text, SubtitleStyle style) {
+        char colorControl = getColorControlCode(style.getColor());
         // 0D = double height
+        if (style.getBackgroundColor() != null) {
+            char backgroundColorControl = getColorControlCode(style.getBackgroundColor());
+            return (char) 0x0D + "" + backgroundColorControl + "" + 0x1D + "" + colorControl + text;
+        }
         return (char) 0x0D + "" + colorControl + text;
     }
 

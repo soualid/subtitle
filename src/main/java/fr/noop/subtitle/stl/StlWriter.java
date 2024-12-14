@@ -300,7 +300,7 @@ public class StlWriter implements SubtitleWriter {
         // 0D = double height
         if (style.getBackgroundColor() != null) {
             char backgroundColorControl = getColorControlCode(style.getBackgroundColor());
-            return (char) 0x0D + "" + backgroundColorControl + "" + 0x1D + "" + colorControl + text;
+            return (char) 0x0D + "" + backgroundColorControl + "" + (char) 0x1D + "" + colorControl + text;
         }
         return (char) 0x0D + "" + colorControl + text;
     }

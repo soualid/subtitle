@@ -183,7 +183,6 @@ public class StlWriter implements SubtitleWriter {
     }
 
     private void writeCue(BaseSubtitleCue cue, DataOutputStream dos, int subtitleNumber) throws IOException {
-        List<SubtitleLine> lines = cue.getLines();
 
         // Validate and adjust time codes
         SubtitleTimeCode start = cue.getStartTime();
@@ -193,32 +192,40 @@ public class StlWriter implements SubtitleWriter {
         }
 
         // Generate the complete text with colors and CR/LF (8A) between lines
-        StringBuilder textBuilder = new StringBuilder();
-        for (int i = 0; i < lines.size(); i++) {
-            SubtitleLine line = lines.get(i);
-            for (var text : line.getTexts()) {
+        List<SubtitleLine> lines = cue.getLines();
+        byte[] textBytes;
+        if (cue instanceof StlCue) {
+            StlCue stlCue = (StlCue) cue;
+            textBytes = stlCue.getTtis().get(0).getTf().getBytes(new Iso6937Charset("ISO-6937-2", new String[]{}));
+        } else {
+            StringBuilder textBuilder = new StringBuilder();
+            for (int i = 0; i < lines.size(); i++) {
+                SubtitleLine line = lines.get(i);
+                for (var text : line.getTexts()) {
 
-                var textToAdd = text.toString();
-                textToAdd = createBox(textToAdd);
-                if (text.isStyled()) {
-                    var styledText = (SubtitleStyledText) text;
-                    textToAdd = applyColor(textToAdd, styledText.getStyle());
+                    var textToAdd = text.toString();
+                    textToAdd = createBox(textToAdd);
+                    if (text.isStyled()) {
+                        var styledText = (SubtitleStyledText) text;
+                        textToAdd = applyColor(textToAdd, styledText.getStyle());
+                    }
+
+
+                    // remove these chars since they're added afterward during box creation
+                    textToAdd = textToAdd.replaceAll("[\\u008A\\n]", "");
+
+                    textBuilder.append(textToAdd);
                 }
 
-
-                // remove these chars since they're added afterward during box creation
-                textToAdd = textToAdd.replaceAll("[\\u008A\\n]", "");
-
-                textBuilder.append(textToAdd);
+                textBuilder.append((char) 0x0A);
+                textBuilder.append((char) 0x0A);
+                textBuilder.append((char) 0x8A);
+                textBuilder.append((char) 0x8A);
             }
-
-            textBuilder.append((char) 0x0A);
-            textBuilder.append((char) 0x0A);
-            textBuilder.append((char) 0x8A);
-            textBuilder.append((char) 0x8A);
+            textBytes = textBuilder.toString().getBytes(new Iso6937Charset("ISO-6937-2", new String[]{}));
         }
 
-        byte[] textBytes = textBuilder.toString().getBytes(new Iso6937Charset("ISO-6937-2", new String[]{}));
+
         int textOffset = 0;
 
         do {

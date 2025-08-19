@@ -14,6 +14,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import fr.noop.subtitle.model.SubtitleParser;
 import fr.noop.subtitle.model.SubtitleParsingException;
@@ -67,6 +69,11 @@ public class SrtParser implements SubtitleParser {
 
                 // First textLine is the cue number
                 try {
+                    // for windows badly encoded srt
+                    textLine = textLine
+                            .replace("\u00FF", "")  // 0xFF (-1)
+                            .replace("\u00FE", ""); // 0xFE (-2)
+
                     Integer.parseInt(textLine);
                 } catch (NumberFormatException e) {
                     throw new SubtitleParsingException(String.format(
